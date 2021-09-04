@@ -26,6 +26,11 @@ type SignModel struct {
 	Body *json.RawMessage `json:"body"`
 }
 
+type SplitModel struct {
+	Message *json.RawMessage `json:"message"`
+	Parts   int              `json:"parts"`
+}
+
 type SendModel struct {
 	Body string `json:"body"`
 	Addr string `json:"addr"`
@@ -67,6 +72,26 @@ func main() {
 
 		return ctx.JSON(http.StatusOK, echo.Map{
 			"sing": hex.EncodeToString(sign),
+			"body": *m.Body,
+		})
+	})
+
+	e.POST("/split", func(ctx echo.Context) error {
+		s := new(SplitModel)
+		if err := ctx.Bind(s); err != nil {
+			log.Error(err)
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+
+		chunk, err := types.EncryptToParts(*s.Message, s.Parts)
+		if err != nil {
+			log.Error(err)
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+
+		return ctx.JSON(http.StatusOK, echo.Map{
+			"status": "OK",
+			"chunks": chunk,
 		})
 	})
 
@@ -149,6 +174,7 @@ func main() {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 
+		req.Header.Add("Token", m.ID)
 		req.Header.Add("Token", m.Token)
 		req.Header.Add("Addr", m.Addr)
 		req.Header.Add("Signature", hex.EncodeToString(sign))
