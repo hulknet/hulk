@@ -1,15 +1,12 @@
 package net
 
 import (
-	"fmt"
+	"github.com/ethereum/go-ethereum/crypto/secp256k1"
+	libHttp "github.com/kotfalya/hulk/research/cpu/http"
+	log "github.com/sirupsen/logrus"
+	"golang.org/x/crypto/sha3"
 	"io/ioutil"
 	"net/http"
-
-	log "github.com/sirupsen/logrus"
-
-	"github.com/ethereum/go-ethereum/crypto/secp256k1"
-	"github.com/kotfalya/hulk/research/cpu/rest"
-	"golang.org/x/crypto/sha3"
 )
 
 type ReceiverHandler struct {
@@ -33,22 +30,16 @@ func checkSignature(msg []byte, sign []byte) (bool, error) {
 }
 
 func (rh *ReceiverHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	token, err := rest.HeaderToToken(r.Header)
+	messageHeader, err := libHttp.ParseHTTPHeader(r.Header)
 	if err != nil {
-		w.WriteHeader(http.StatusForbidden)
-		log.Errorf("token is invalid, %s\n", err)
+		w.WriteHeader(http.StatusBadRequest)
+		log.Errorf("header is invalid, %s\n", err)
 		return
 	}
 
-	peerIn, ok := rh.net.CheckToken(token)
+	peerIn, ok := rh.net.CheckToken(messageHeader.Token)
 	if !ok {
 		http.Error(w, "token is invalid", http.StatusForbidden)
-		return
-	}
-
-	sign, err := rest.HeaderToSignature(r.Header)
-	if err != nil {
-		http.Error(w, "signature is invalid", http.StatusBadRequest)
 		return
 	}
 
@@ -59,12 +50,10 @@ func (rh *ReceiverHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s := string(body)
-	fmt.Println(s)
-	correct, err := checkSignature(body, sign[:])
+	correct, err := checkSignature(body, messageHeader.Sign[0][:])
 	if err != nil || !correct {
 		log.Error(err)
-		http.Error(w, "signature is invalid", http.StatusBadRequest)
+		http.Error(w, "signature is invalid", http.StatusForbidden)
 		return
 	}
 
@@ -73,14 +62,7 @@ func (rh *ReceiverHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	addr, err := rest.HeaderToAddr(r.Header)
-	if err != nil {
-		log.Errorf("addr is invalid, %s\n", err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	peer := rh.net.FindPeer(addr)
+	peer := rh.net.FindPeer(messageHeader.To)
 	if peer.Equal(rh.net.Self()) {
 		w.Write([]byte("self"))
 	} else {

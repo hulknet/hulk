@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/kotfalya/hulk/research/cpu/rest"
+	"github.com/kotfalya/hulk/research/cpu/http"
 	"github.com/kotfalya/hulk/research/cpu/types"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -43,12 +43,12 @@ func main() {
 			return echo.NewHTTPError(http.StatusUnauthorized, "invalid credentials")
 		}
 
-		tokenType := rest.TokenTypeFromString(s.Type)
-		if tokenType == rest.UnknownTokenType {
+		tokenType := http.TokenTypeFromString(s.Type)
+		if tokenType == http.UnknownTokenType {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid type of service")
 		}
 
-		t, err := rest.GenerateToken(pKey, tokenType)
+		t, err := http.GenerateToken(pKey, tokenType)
 		if err != nil {
 			log.Error(err)
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())

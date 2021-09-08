@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/kotfalya/hulk/research/cpu/rest"
+	"github.com/kotfalya/hulk/research/cpu/http"
 	"github.com/kotfalya/hulk/research/cpu/types"
 	"github.com/labstack/echo/v4"
 )
@@ -16,7 +16,7 @@ func main() {
 	}
 
 	e := echo.New()
-	e.Use(rest.RegisterJWT(pKey))
+	e.Use(http.RegisterJWT(pKey))
 	e.GET("/status", func(ctx echo.Context) error {
 		return ctx.JSON(http.StatusOK, echo.Map{
 			"status":  "OK",

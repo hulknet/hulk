@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"errors"
+	"github.com/ethereum/go-ethereum/crypto"
 	"io/ioutil"
 	"math"
 	"math/big"
@@ -16,19 +17,21 @@ import (
 	rd "math/rand"
 	"path/filepath"
 	"time"
-
-	"github.com/ethereum/go-ethereum/crypto"
 )
 
 const (
-	ErrDecodeID   = "decode of ID failed"
-	ErrSizeID     = "size of ID is invalid"
-	ErrDecodeSign = "decode of Sign failed"
-	ErrSizeSign   = "size of Sign is invalid"
+	ErrDecodeByte32 = "decode of ByteArray failed"
+	ErrSizeByte32   = "size of ByteArray is invalid"
+	ErrSizeSign     = "size of Sign is invalid"
 
-	ErrGetToken    = "failed to get token  from request header"
+	ErrGetToken    = "failed to get Token from request header"
 	ErrDecodeToken = "decode of Token failed"
-	ErrDecodeAddr  = "decode of request Address"
+	ErrGetAddr     = "failed to get Address  from request header"
+	ErrGetID       = "failed to get ID  from request header"
+	ErrDecodeAddr  = "decode of Address failed"
+	ErrGetSign     = "failed to get Signature  from request header"
+	ErrDecodeSign  = "decode of Signature failed"
+	ErrDecodePart  = "decode of  Partition failed"
 )
 
 type Token [32]byte
@@ -103,13 +106,13 @@ func ToHex(s [32]byte) string {
 func FromHex(s string) ([32]byte, error) {
 	data, err := hex.DecodeString(s)
 	if err != nil {
-		return [32]byte{}, errors.New(ErrDecodeID)
+		return [32]byte{}, errors.New(ErrDecodeByte32)
 	}
 
 	var id [32]byte
 	bitLen := copy(id[:], data[:32])
 	if bitLen != 32 {
-		return [32]byte{}, errors.New(ErrSizeID)
+		return [32]byte{}, errors.New(ErrSizeByte32)
 	}
 
 	return id, nil

@@ -15,20 +15,22 @@ type MessageHeader struct {
 type BaseMessage struct {
 	Type MessageType      `json:"type"`
 	Data *json.RawMessage `json:"data"`
+	Part Partition        `json:"part"`
 	Sign []Sign           `json:"sign"`
 }
 
 type Partition struct {
-	Length   byte `json:"length"`
-	Position byte `json:"position"`
+	Position uint64
+	Length   uint64
+	Enabled  bool
 }
 
 type Replica struct {
-	Max byte
-	Min byte
+	Max uint64
+	Min uint64
 }
 
 type Shard struct {
-	Len byte
-	Num byte
+	Len uint64
+	Num uint64
 }

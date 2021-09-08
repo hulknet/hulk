@@ -18,8 +18,8 @@ type MessageHeaderModel struct {
 	ID    string           `json:"id"`
 	Addr  string           `json:"addr"`
 	Token string           `json:"token"`
+	Part  string           `json:"part"`
 	Body  *json.RawMessage `json:"body"`
-	//Part  Partition `json:"part"`
 }
 
 type SignModel struct {
@@ -174,9 +174,10 @@ func main() {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 
-		req.Header.Add("Token", m.ID)
+		req.Header.Add("ID", m.ID)
 		req.Header.Add("Token", m.Token)
 		req.Header.Add("Addr", m.Addr)
+		req.Header.Add("Partition", m.Part)
 		req.Header.Add("Signature", hex.EncodeToString(sign))
 		resp, err := client.Do(req)
 		if err != nil {
