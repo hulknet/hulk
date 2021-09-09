@@ -3,9 +3,10 @@ package net
 import (
 	"net/http"
 
-	"github.com/kotfalya/hulk/research/cpu/http"
-	"github.com/kotfalya/hulk/research/cpu/types"
 	"github.com/labstack/echo/v4"
+
+	libHttp "github.com/kotfalya/hulk/research/cpu/http"
+	"github.com/kotfalya/hulk/research/cpu/types"
 )
 
 type Rest struct {
@@ -23,7 +24,7 @@ func NewRestServer(net *Net, addr string, secret interface{}) *Rest {
 		secret: secret,
 	}
 
-	r.echo.Use(http.RegisterJWT(secret))
+	r.echo.Use(libHttp.RegisterJWT(secret))
 
 	r.echo.GET("/status", func(ctx echo.Context) error {
 		return ctx.JSON(http.StatusOK, echo.Map{
@@ -33,8 +34,8 @@ func NewRestServer(net *Net, addr string, secret interface{}) *Rest {
 
 	r.echo.GET("/token", func(ctx echo.Context) error {
 		return ctx.JSON(http.StatusOK, echo.Map{
-			"id":   types.ToHex(http.ServiceFromContext(ctx).ID),
-			"type": http.TokenToString(http.ServiceFromContext(ctx).Type),
+			"id":   types.ToHex(libHttp.ServiceFromContext(ctx).ID),
+			"type": libHttp.TokenToString(libHttp.ServiceFromContext(ctx).Type),
 		})
 	})
 

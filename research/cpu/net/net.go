@@ -37,9 +37,9 @@ func (n *Net) FindPeer(target types.Addr) types.PeerOut {
 	return n.table.GetPeer(target)
 }
 
-func (n *Net) CheckToken(token types.Token) (types.PeerIn, bool) {
-	peerIn, ok := n.allowList[token]
-	return peerIn, ok
+func (n *Net) CheckToken(token types.Token) bool {
+	_, ok := n.allowList[token]
+	return ok
 }
 
 func (n *Net) CheckPeer(peer types.PeerIn) bool {
@@ -49,6 +49,16 @@ func (n *Net) CheckPeer(peer types.PeerIn) bool {
 
 func (n *Net) Self() types.PeerOut {
 	return n.self
+}
+
+func (n *Net) HandleMessage(header types.MessageHeader, data []byte) error {
+	//if !rh.net.CheckPeer(peerIn) {
+	//	w.WriteHeader(http.StatusForbidden)
+	//	return
+	//}
+	//
+	//peer := rh.net.FindPeer(messageHeader.To)
+	return nil
 }
 
 func createAllowLost(self types.PeerIn) allowList {
