@@ -9,7 +9,6 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"errors"
-	"github.com/ethereum/go-ethereum/crypto"
 	"io/ioutil"
 	"math"
 	"math/big"
@@ -17,6 +16,8 @@ import (
 	rd "math/rand"
 	"path/filepath"
 	"time"
+
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 const (

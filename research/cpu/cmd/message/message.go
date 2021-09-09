@@ -5,13 +5,15 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/kotfalya/hulk/research/cpu/types"
 	"github.com/labstack/echo/v4"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/sha3"
-	"io/ioutil"
-	"net/http"
+
+	"github.com/kotfalya/hulk/research/cpu/types"
 )
 
 type MessageHeaderModel struct {

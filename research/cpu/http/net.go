@@ -75,7 +75,7 @@ func parseSignature(header http.Header) (sign []types.Sign, err error) {
 func parseAddr(header http.Header) (addr types.Addr, err error) {
 	addrStr := header.Get(addrHeader)
 	if addrStr == "" {
-		err = errors.New(types.ErrGetToken)
+		err = errors.New(types.ErrGetAddr)
 		return
 	}
 
