@@ -61,8 +61,8 @@ func parseSignature(header http.Header) (sign []types.Sign, err error) {
 	}
 
 	for _, s := range strings.Split(signHex, ",") {
-		signItem, err := types.SignFromHex(s)
-		if err != nil {
+		signItem, er := types.SignFromHex(s)
+		if er != nil {
 			err = errors.New(types.ErrDecodeSign)
 			return
 		}

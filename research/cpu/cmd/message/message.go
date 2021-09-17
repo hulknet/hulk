@@ -17,11 +17,11 @@ import (
 )
 
 type MessageHeaderModel struct {
-	ID    string           `json:"id"`
-	Addr  string           `json:"addr"`
-	Token string           `json:"token"`
-	Part  string           `json:"part"`
-	Body  *json.RawMessage `json:"body"`
+	ID    string `json:"id"`
+	Addr  string `json:"addr"`
+	Token string `json:"token"`
+	Part  string `json:"part"`
+	Body  string `json:"body"`
 }
 
 type SignModel struct {
@@ -34,8 +34,10 @@ type SplitModel struct {
 }
 
 type SendModel struct {
-	Body string `json:"body"`
-	Addr string `json:"addr"`
+	ID    string `json:"id"`
+	Token string `json:"token"`
+	Body  string `json:"body"`
+	Addr  string `json:"addr"`
 }
 
 type TokenModel struct {
@@ -47,8 +49,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	var token string
 
 	e := echo.New()
 
@@ -91,24 +91,18 @@ func main() {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 
-		return ctx.JSON(http.StatusOK, echo.Map{
-			"status": "OK",
-			"chunks": chunk,
-		})
-	})
-
-	e.POST("/token", func(ctx echo.Context) error {
-		m := new(TokenModel)
-		if err := ctx.Bind(m); err != nil {
+		_, err = types.DecryptFromParts(chunk)
+		if err != nil {
 			log.Error(err)
-			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
-
-		token = m.Token
-
+		res := make([]string, len(chunk))
+		for i, v := range chunk {
+			res[i] = hex.EncodeToString(v)
+		}
 		return ctx.JSON(http.StatusOK, echo.Map{
 			"status": "OK",
-			"token":  token,
+			"chunks": res,
 		})
 	})
 
@@ -127,14 +121,14 @@ func main() {
 		}
 
 		client := http.Client{}
-
 		req, err := http.NewRequest("POST", "http://127.0.0.1:7002", bytes.NewBufferString(m.Body))
 		if err != nil {
 			log.Error(err)
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 
-		req.Header.Add("Token", token)
+		req.Header.Add("ID", m.ID)
+		req.Header.Add("Token", m.Token)
 		req.Header.Add("Addr", m.Addr)
 		req.Header.Add("Signature", hex.EncodeToString(sign))
 		resp, err := client.Do(req)
@@ -161,7 +155,7 @@ func main() {
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
 
-		msgHash := sha3.Sum256(*m.Body)
+		msgHash := sha3.Sum256([]byte(m.Body))
 		sign, err := crypto.Sign(msgHash[:], pKey)
 		if err != nil {
 			log.Error(err)
@@ -170,7 +164,7 @@ func main() {
 
 		client := http.Client{}
 
-		req, err := http.NewRequest("POST", "http://127.0.0.1:7002", bytes.NewBuffer(*m.Body))
+		req, err := http.NewRequest("POST", "http://127.0.0.1:7002", bytes.NewBufferString(m.Body))
 		if err != nil {
 			log.Error(err)
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())

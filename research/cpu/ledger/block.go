@@ -38,4 +38,10 @@ func (b Block) IsFirst() bool {
 
 type Tick []Block
 
-func (t Tick) Block() {}
+func (t Tick) NodeBlock() Block {
+	return t[len(t)-1]
+}
+
+func (t Tick) NetBlock() Block {
+	return t[0]
+}

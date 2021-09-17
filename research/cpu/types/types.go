@@ -37,29 +37,13 @@ const (
 
 type Token [32]byte
 type Permission []byte
-type PeerOut struct {
+type Peer struct {
 	PK    PK
 	Token Token
 }
 
-func (p PeerOut) Equal(other PeerOut) bool {
+func (p Peer) Equal(other Peer) bool {
 	return p.PK == other.PK
-}
-
-type PeerIn struct {
-	PK    PK
-	Token Token
-}
-
-func (p PeerIn) Equal(other PeerIn) bool {
-	return p.PK == other.PK
-}
-
-func PeerOutToIn(out PeerOut) PeerIn {
-	return PeerIn{
-		PK:    out.PK,
-		Token: out.Token,
-	}
 }
 
 func Random() int {

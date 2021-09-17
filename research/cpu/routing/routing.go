@@ -6,12 +6,12 @@ import (
 )
 
 type Table struct {
-	self    types.PeerOut
+	self    types.Peer
 	tick    ledger.Tick
 	buckets []Bucket
 }
 
-func NewRoutingTable(self types.PeerOut, tick ledger.Tick) *Table {
+func NewRoutingTable(self types.Peer, tick ledger.Tick) *Table {
 	t := &Table{
 		self:    self,
 		tick:    tick,
@@ -21,11 +21,11 @@ func NewRoutingTable(self types.PeerOut, tick ledger.Tick) *Table {
 	return t
 }
 
-func (rt *Table) GetPeer(target types.Addr) types.PeerOut {
+func (rt *Table) GetPeer(target types.Addr) types.Peer {
 	return rt.bucket(target).GetPeer(target)
 }
 
-func (rt *Table) SetPeer(peer types.PeerOut) {
+func (rt *Table) SetPeer(peer types.Peer) {
 	rt.bucket(peer.PK.ID().Addr()).SetPeer(peer)
 }
 

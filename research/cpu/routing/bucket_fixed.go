@@ -8,22 +8,22 @@ import (
 
 type FixedBucket struct {
 	*BaseBucket
-	peers  map[byte]types.PeerOut
+	peers  map[byte]types.Peer
 	bitmap types.Bitmap256
 }
 
 func NewFixedBucket(bitSizePrefix uint8, bitSize uint8) *FixedBucket {
 	return &FixedBucket{
 		BaseBucket: &BaseBucket{bitSize: bitSize, bitSizePrefix: bitSizePrefix},
-		peers:      make(map[byte]types.PeerOut, int(math.Pow(2, float64(bitSize)))),
+		peers:      make(map[byte]types.Peer, int(math.Pow(2, float64(bitSize)))),
 	}
 }
 
-func (b *FixedBucket) GetPeer(target types.Addr) types.PeerOut {
+func (b *FixedBucket) GetPeer(target types.Addr) types.Peer {
 	return b.peers[b.bucketAddr(target)]
 }
 
-func (b *FixedBucket) SetPeer(peer types.PeerOut) {
+func (b *FixedBucket) SetPeer(peer types.Peer) {
 	bucketAddr := b.bucketAddr(peer.PK.ID().Addr())
 	if b.bitmap.IsSet(bucketAddr) {
 		return

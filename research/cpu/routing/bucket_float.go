@@ -9,7 +9,7 @@ import (
 
 type FloatBucket struct {
 	*BaseBucket
-	peers []types.PeerOut
+	peers []types.Peer
 }
 
 func NewFloatBucket(bitSizePrefix uint8, bitSize uint8) *FloatBucket {
@@ -18,7 +18,7 @@ func NewFloatBucket(bitSizePrefix uint8, bitSize uint8) *FloatBucket {
 	}
 }
 
-func (b *FloatBucket) GetPeer(target types.Addr) types.PeerOut {
+func (b *FloatBucket) GetPeer(target types.Addr) types.Peer {
 	if len(b.peers) == 1 {
 		return b.peers[0]
 	}
@@ -27,12 +27,12 @@ func (b *FloatBucket) GetPeer(target types.Addr) types.PeerOut {
 	return b.peers[index]
 }
 
-func (b *FloatBucket) SetPeer(peer types.PeerOut) {
+func (b *FloatBucket) SetPeer(peer types.Peer) {
 	b.peers = append(b.peers, peer)
 	sort.Sort(peerByAddr(b.peers))
 }
 
-type peerByAddr []types.PeerOut
+type peerByAddr []types.Peer
 
 func (a peerByAddr) Len() int           { return len(a) }
 func (a peerByAddr) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }

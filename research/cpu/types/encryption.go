@@ -139,7 +139,7 @@ func extractDataFromChunk(chunk [][]byte, keySize KeySize) (message []byte, key 
 			keyPrefixLen = keySize.Len() - i*keyPrefixLen
 		}
 		key = append(key, chunk[i][:keyPrefixLen]...)
-		message = append(message, chunk[i][keyPrefixLen-1:]...)
+		message = append(message, chunk[i][keyPrefixLen:]...)
 	}
 	return
 }

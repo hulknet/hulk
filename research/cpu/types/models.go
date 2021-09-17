@@ -22,7 +22,6 @@ type BaseMessage struct {
 type Partition struct {
 	Position uint64
 	Length   uint64
-	Enabled  bool
 }
 
 type Replica struct {

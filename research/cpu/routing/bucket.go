@@ -5,8 +5,8 @@ import (
 )
 
 type Bucket interface {
-	GetPeer(addr types.Addr) types.PeerOut
-	SetPeer(peer types.PeerOut)
+	GetPeer(addr types.Addr) types.Peer
+	SetPeer(peer types.Peer)
 	BitSize() uint8
 	BitSizePrefix() uint8
 }

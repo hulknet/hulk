@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/kotfalya/hulk/research/cpu/http"
-	"github.com/kotfalya/hulk/research/cpu/types"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	log "github.com/sirupsen/logrus"
+
+	libHttp "github.com/kotfalya/hulk/research/cpu/http"
+	"github.com/kotfalya/hulk/research/cpu/types"
 )
 
 const DefaultPassword = "password"
@@ -43,12 +44,12 @@ func main() {
 			return echo.NewHTTPError(http.StatusUnauthorized, "invalid credentials")
 		}
 
-		tokenType := http.TokenTypeFromString(s.Type)
-		if tokenType == http.UnknownTokenType {
+		tokenType := libHttp.TokenTypeFromString(s.Type)
+		if tokenType == libHttp.UnknownTokenType {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid type of service")
 		}
 
-		t, err := http.GenerateToken(pKey, tokenType)
+		t, err := libHttp.GenerateToken(pKey, tokenType)
 		if err != nil {
 			log.Error(err)
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())

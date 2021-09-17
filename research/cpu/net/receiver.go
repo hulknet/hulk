@@ -30,7 +30,7 @@ func (rh *ReceiverHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !rh.net.CheckToken(messageHeader.Token) {
-		http.Error(w, "token is invalid", http.StatusForbidden)
+		http.Error(w, "unknown token", http.StatusForbidden)
 		return
 	}
 
@@ -50,7 +50,7 @@ func (rh *ReceiverHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if err = rh.net.HandleMessage(messageHeader, messageBody); err != nil {
 		log.Error(err)
-		http.Error(w, "signature is invalid", http.StatusForbidden)
+		http.Error(w, "failed to handle message", http.StatusInternalServerError)
 	} else {
 		w.WriteHeader(http.StatusOK)
 	}
