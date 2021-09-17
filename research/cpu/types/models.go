@@ -2,8 +2,6 @@ package types
 
 import "encoding/json"
 
-type MessageType string
-
 type MessageHeader struct {
 	ID    ID
 	To    Addr
@@ -13,10 +11,9 @@ type MessageHeader struct {
 }
 
 type BaseMessage struct {
-	Type MessageType      `json:"type"`
+	Type string           `json:"type"`
 	Data *json.RawMessage `json:"data"`
-	Part Partition        `json:"part"`
-	Sign []Sign           `json:"sign"`
+	Sign string           `json:"sign"`
 }
 
 type Partition struct {

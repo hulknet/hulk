@@ -4,11 +4,10 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/crypto/sha3"
 
 	libHttp "github.com/kotfalya/hulk/research/cpu/http"
+	"github.com/kotfalya/hulk/research/cpu/types"
 )
 
 type ReceiverHandler struct {
@@ -41,7 +40,7 @@ func (rh *ReceiverHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	correct, err := checkSignature(messageBody, messageHeader.Sign[0][:])
+	correct, err := types.CheckSignature(messageBody, messageHeader.Sign[0][:])
 	if err != nil || !correct {
 		log.Error(err)
 		http.Error(w, "signature is invalid", http.StatusForbidden)
@@ -54,14 +53,4 @@ func (rh *ReceiverHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.WriteHeader(http.StatusOK)
 	}
-}
-
-func checkSignature(msg []byte, sign []byte) (bool, error) {
-	msgHash := sha3.Sum256(msg)
-	pk, err := secp256k1.RecoverPubkey(msgHash[:], sign[:])
-	if err != nil {
-		return false, err
-	}
-
-	return secp256k1.VerifySignature(pk, msgHash[:], sign[:64]), nil
 }

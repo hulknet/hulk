@@ -2,6 +2,7 @@ package net
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 
 	"github.com/kotfalya/hulk/research/cpu/ledger"
@@ -156,7 +157,20 @@ func createProcessor(tick ledger.Tick) Processor {
 			if err != nil {
 				fmt.Errorf("failed to decode message: %v", err)
 			}
-			fmt.Println(string(d))
+
+			var baseMessage types.BaseMessage
+			if err = json.Unmarshal(d, &baseMessage); err != nil {
+				fmt.Errorf("failed to unmarshal BaseMessage: %v", err)
+			}
+
+			ok, err := types.CheckStringSignature(*baseMessage.Data, baseMessage.Sign)
+			if err != nil {
+				fmt.Errorf("failed to check signature: %v", err)
+			} else if !ok {
+				fmt.Errorf("signature is invalid: %v", baseMessage)
+			}
+
+			fmt.Println(baseMessage.Type)
 		} else {
 			fmt.Println(string(m.messages[0]))
 		}
