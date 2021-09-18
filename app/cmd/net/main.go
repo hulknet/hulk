@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/kotfalya/hulk/app/ledger"
-	net2 "github.com/kotfalya/hulk/app/net"
+	"github.com/kotfalya/hulk/app/net"
 	"github.com/kotfalya/hulk/app/types"
 )
 
@@ -28,8 +28,6 @@ func main() {
 		ID:      id,
 		PID:     id,
 		BitSize: 1,
-		N:       2,
-		U:       1,
 	}
 	t := ledger.Tick{b}
 	pOut := types.Peer{
@@ -37,32 +35,25 @@ func main() {
 		Token: token,
 	}
 
-	n := net2.NewNet(pOut)
+	n := net.NewNet(pOut)
 	n.Init(t)
 	go func() {
 		panic(n.Start())
 	}()
-	//var pk1 types.PK = types.GenerateSHA()
-	//var token1 types.Token = types.GenerateSHA()
-	//pOut1 := types.Peer{
-	//	PK:    pk1,
-	//	Token: token1,
-	//}
-	//n.AddPeer(pOut1)
 
 	pKey, err := types.DecodeDefaultPublicKey()
 	if err != nil {
 		panic(err)
 	}
 
-	r := net2.NewRestServer(n, "127.0.0.1:7001", pKey)
+	r := net.NewRestServer(n, "127.0.0.1:7001", pKey)
 
 	errChan := make(chan error)
 	go func() {
 		errChan <- r.Listen()
 	}()
 	go func() {
-		errChan <- http.ListenAndServe("127.0.0.1:7002", net2.NewReceiverHandler(n))
+		errChan <- http.ListenAndServe("127.0.0.1:7002", net.NewReceiverHandler(n))
 	}()
 
 	select {

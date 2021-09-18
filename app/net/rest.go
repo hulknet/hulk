@@ -5,7 +5,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	http2 "github.com/kotfalya/hulk/app/http"
+	libHttp "github.com/kotfalya/hulk/app/http"
 	"github.com/kotfalya/hulk/app/types"
 )
 
@@ -24,7 +24,7 @@ func NewRestServer(net *Net, addr string, secret interface{}) *Rest {
 		secret: secret,
 	}
 
-	r.echo.Use(http2.RegisterJWT(secret))
+	r.echo.Use(libHttp.RegisterJWT(secret))
 
 	r.echo.GET("/status", func(ctx echo.Context) error {
 		return ctx.JSON(http.StatusOK, echo.Map{
@@ -34,8 +34,8 @@ func NewRestServer(net *Net, addr string, secret interface{}) *Rest {
 
 	r.echo.GET("/token", func(ctx echo.Context) error {
 		return ctx.JSON(http.StatusOK, echo.Map{
-			"id":   types.ToHex(http2.ServiceFromContext(ctx).ID),
-			"type": http2.TokenToString(http2.ServiceFromContext(ctx).Type),
+			"id":   types.ToHex(libHttp.ServiceFromContext(ctx).ID),
+			"type": libHttp.TokenToString(libHttp.ServiceFromContext(ctx).Type),
 		})
 	})
 

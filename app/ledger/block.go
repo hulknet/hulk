@@ -1,10 +1,6 @@
 package ledger
 
 import (
-	"math/bits"
-
-	"github.com/kotfalya/hulk/pkg/utils"
-
 	"github.com/kotfalya/hulk/app/types"
 )
 
@@ -13,16 +9,6 @@ type Block struct {
 	PID     types.ID
 	PPID    types.ID
 	BitSize uint8
-	N       uint64
-	U       uint64
-}
-
-func (b Block) IsPivot(pk types.PK) bool {
-	if !b.IsRoot() {
-		return false
-	}
-	l := bits.Len8(uint8(b.N))
-	return utils.Cpl(pk[:1], b.ID[:1]) >= l
 }
 
 func (b Block) IsRoot() bool {

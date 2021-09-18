@@ -13,7 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/sha3"
 
-	types2 "github.com/kotfalya/hulk/app/types"
+	"github.com/kotfalya/hulk/app/types"
 )
 
 type MessageHeaderModel struct {
@@ -40,12 +40,8 @@ type SendModel struct {
 	Addr  string `json:"addr"`
 }
 
-type TokenModel struct {
-	Token string `json:"token"`
-}
-
 func main() {
-	pKey, err := types2.DecodeDefaultPrivateKey()
+	pKey, err := types.DecodeDefaultPrivateKey()
 	if err != nil {
 		panic(err)
 	}
@@ -85,13 +81,13 @@ func main() {
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
 
-		chunk, err := types2.EncryptToParts(*s.Message, s.Parts)
+		chunk, err := types.EncryptToParts(*s.Message, s.Parts)
 		if err != nil {
 			log.Error(err)
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 
-		_, err = types2.DecryptFromParts(chunk)
+		_, err = types.DecryptFromParts(chunk)
 		if err != nil {
 			log.Error(err)
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())

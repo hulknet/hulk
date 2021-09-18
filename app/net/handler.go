@@ -6,17 +6,17 @@ import (
 	"fmt"
 
 	"github.com/kotfalya/hulk/app/ledger"
-	types2 "github.com/kotfalya/hulk/app/types"
+	"github.com/kotfalya/hulk/app/types"
 )
 
 type MessageItem struct {
-	id   types2.ID
-	part types2.Partition
+	id   types.ID
+	part types.Partition
 	data []byte
 }
 
 type Message struct {
-	id       types2.ID
+	id       types.ID
 	length   uint64
 	received uint64
 	messages [][]byte
@@ -30,7 +30,7 @@ func (m *Message) Update(position uint64, data []byte) bool {
 	// waits for msgpack
 	data, err := hex.DecodeString(string(data))
 	if err != nil {
-		fmt.Errorf("%v", err)
+		fmt.Println(err)
 	}
 
 	m.messages[position] = data
@@ -54,7 +54,7 @@ func newMessage(mi MessageItem) (m Message) {
 		// waits for msgpack
 		data, err := hex.DecodeString(string(mi.data))
 		if err != nil {
-			fmt.Errorf("%v", err)
+			fmt.Println(err)
 		}
 
 		m.messages[mi.part.Position] = data
@@ -67,23 +67,23 @@ func newMessage(mi MessageItem) (m Message) {
 }
 
 type MessageState struct {
-	messages map[types2.ID]Message
-	resolved map[types2.ID]struct{}
+	messages map[types.ID]Message
+	resolved map[types.ID]struct{}
 }
 
 func newMessageState() *MessageState {
 	return &MessageState{
-		messages: make(map[types2.ID]Message, 0),
-		resolved: make(map[types2.ID]struct{}, 0),
+		messages: make(map[types.ID]Message, 0),
+		resolved: make(map[types.ID]struct{}, 0),
 	}
 }
 
-func (s *MessageState) IsMessageResolved(id types2.ID) bool {
+func (s *MessageState) IsMessageResolved(id types.ID) bool {
 	_, ok := s.resolved[id]
 	return ok
 }
 
-func (s *MessageState) Resolve(id types2.ID) {
+func (s *MessageState) Resolve(id types.ID) {
 	s.resolved[id] = struct{}{}
 	delete(s.messages, id)
 }
@@ -107,7 +107,7 @@ type MessageHandler struct {
 	messageCh    chan MessageItem
 	tick         ledger.Tick
 	state        *MessageState
-	stateArchive map[types2.ID]*MessageState
+	stateArchive map[types.ID]*MessageState
 	processor    func(m Message)
 }
 
@@ -115,7 +115,7 @@ func NewMessageHandler(tick ledger.Tick) *MessageHandler {
 	return &MessageHandler{
 		tick:      tick,
 		state:     newMessageState(),
-		processor: createProcessor(tick),
+		processor: createProcessor(),
 		tickCh:    make(chan ledger.Tick, 1),
 		messageCh: make(chan MessageItem, 10),
 	}
@@ -125,7 +125,7 @@ func (h *MessageHandler) SetTick(tick ledger.Tick) {
 	h.tickCh <- tick
 }
 
-func (h *MessageHandler) Message(id types2.ID, part types2.Partition, data []byte) {
+func (h *MessageHandler) Message(id types.ID, part types.Partition, data []byte) {
 	h.messageCh <- MessageItem{id, part, data}
 }
 
@@ -150,24 +150,24 @@ func (h *MessageHandler) Start() error {
 	}
 }
 
-func createProcessor(tick ledger.Tick) Processor {
+func createProcessor() Processor {
 	return func(m Message) {
 		if m.length > 1 {
-			d, err := types2.DecryptFromParts(m.messages)
+			d, err := types.DecryptFromParts(m.messages)
 			if err != nil {
-				fmt.Errorf("failed to decode message: %v", err)
+				fmt.Printf("error decodingfailed to decode message: %v \n", err)
 			}
 
-			var baseMessage types2.BaseMessage
+			var baseMessage types.BaseMessage
 			if err = json.Unmarshal(d, &baseMessage); err != nil {
-				fmt.Errorf("failed to unmarshal BaseMessage: %v", err)
+				fmt.Printf("failed to unmarshal BaseMessage: %v \n", err)
 			}
 
-			ok, err := types2.CheckStringSignature(*baseMessage.Data, baseMessage.Sign)
+			ok, err := types.CheckStringSignature(*baseMessage.Data, baseMessage.Sign)
 			if err != nil {
-				fmt.Errorf("failed to check signature: %v", err)
+				fmt.Printf("failed to check signature: %v \n", err)
 			} else if !ok {
-				fmt.Errorf("signature is invalid: %v", baseMessage)
+				fmt.Printf("signature is invalid: %v \n", baseMessage)
 			}
 
 			fmt.Println(baseMessage.Type)

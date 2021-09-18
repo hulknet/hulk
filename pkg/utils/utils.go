@@ -14,8 +14,9 @@ import (
 	rd "math/rand"
 	"time"
 
-	cr "github.com/kotfalya/hulk/pkg/crypto"
 	log "github.com/sirupsen/logrus"
+
+	cr "github.com/kotfalya/hulk/pkg/crypto"
 )
 
 func TryClose(l *log.Entry, closer ...io.Closer) {

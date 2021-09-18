@@ -4,11 +4,11 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt"
-	"github.com/kotfalya/hulk/pkg/utils"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
 	"github.com/kotfalya/hulk/app/types"
+	"github.com/kotfalya/hulk/pkg/utils"
 )
 
 type JWTClaims struct {

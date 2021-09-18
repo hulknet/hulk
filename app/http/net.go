@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	types2 "github.com/kotfalya/hulk/app/types"
+	"github.com/kotfalya/hulk/app/types"
 )
 
 const (
@@ -17,7 +17,7 @@ const (
 	signatureHeader = "Signature"
 )
 
-func ParseHTTPHeader(header http.Header) (messageHeader types2.MessageHeader, err error) {
+func ParseHTTPHeader(header http.Header) (messageHeader types.MessageHeader, err error) {
 	if messageHeader.Token, err = parseToken(header); err != nil {
 		return
 	}
@@ -37,33 +37,33 @@ func ParseHTTPHeader(header http.Header) (messageHeader types2.MessageHeader, er
 	return
 }
 
-func parseToken(header http.Header) (token types2.Token, err error) {
+func parseToken(header http.Header) (token types.Token, err error) {
 	tokenHex := header.Get(tokenHeader)
 	if tokenHex == "" {
-		err = errors.New(types2.ErrGetToken)
+		err = errors.New(types.ErrGetToken)
 		return
 	}
 
-	token, err = types2.FromHex(tokenHex)
+	token, err = types.FromHex(tokenHex)
 	if err != nil {
-		err = errors.New(types2.ErrDecodeToken)
+		err = errors.New(types.ErrDecodeToken)
 		return
 	}
 
 	return
 }
 
-func parseSignature(header http.Header) (sign []types2.Sign, err error) {
+func parseSignature(header http.Header) (sign []types.Sign, err error) {
 	signHex := header.Get(signatureHeader)
 	if signHex == "" {
-		err = errors.New(types2.ErrGetSign)
+		err = errors.New(types.ErrGetSign)
 		return
 	}
 
 	for _, s := range strings.Split(signHex, ",") {
-		signItem, er := types2.SignFromHex(s)
+		signItem, er := types.SignFromHex(s)
 		if er != nil {
-			err = errors.New(types2.ErrDecodeSign)
+			err = errors.New(types.ErrDecodeSign)
 			return
 		}
 		sign = append(sign, signItem)
@@ -72,52 +72,52 @@ func parseSignature(header http.Header) (sign []types2.Sign, err error) {
 	return
 }
 
-func parseAddr(header http.Header) (addr types2.Addr, err error) {
+func parseAddr(header http.Header) (addr types.Addr, err error) {
 	addrStr := header.Get(addrHeader)
 	if addrStr == "" {
-		err = errors.New(types2.ErrGetAddr)
+		err = errors.New(types.ErrGetAddr)
 		return
 	}
 
 	addrInt, err := strconv.ParseUint(addrStr, 10, 64)
 	if err != nil {
-		err = errors.New(types2.ErrDecodeAddr)
+		err = errors.New(types.ErrDecodeAddr)
 		return
 	}
-	addr = types2.Addr(addrInt)
+	addr = types.Addr(addrInt)
 
 	return
 }
 
-func parseID(header http.Header) (id types2.ID, err error) {
+func parseID(header http.Header) (id types.ID, err error) {
 	idStr := header.Get(idHeader)
 	if idStr == "" {
-		err = errors.New(types2.ErrGetID)
+		err = errors.New(types.ErrGetID)
 		return
 	}
-	id, err = types2.FromHex(idStr)
+	id, err = types.FromHex(idStr)
 
 	return
 }
 
-func parsePart(header http.Header) (part types2.Partition, err error) {
+func parsePart(header http.Header) (part types.Partition, err error) {
 	partStr := header.Get(partHeader)
 	if partStr == "" {
 		return
 	}
 	partList := strings.Split(partStr, ",")
 	if len(partList) != 2 {
-		err = errors.New(types2.ErrDecodePart)
+		err = errors.New(types.ErrDecodePart)
 		return
 	}
 	part.Position, err = strconv.ParseUint(partList[0], 10, 64)
 	if err != nil {
-		err = errors.New(types2.ErrDecodePart)
+		err = errors.New(types.ErrDecodePart)
 		return
 	}
 	part.Length, err = strconv.ParseUint(partList[1], 10, 64)
 	if err != nil {
-		err = errors.New(types2.ErrDecodePart)
+		err = errors.New(types.ErrDecodePart)
 		return
 	}
 
