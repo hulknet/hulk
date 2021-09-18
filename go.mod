@@ -3,21 +3,17 @@ module github.com/kotfalya/hulk
 go 1.17
 
 require (
-	github.com/asdine/storm/v3 v3.2.0
+	github.com/asdine/storm/v3 v3.2.1
 	github.com/ethereum/go-ethereum v1.10.6
 	github.com/golang-jwt/jwt v3.2.2+incompatible
-	github.com/google/uuid v1.1.5
 	github.com/labstack/echo/v4 v4.5.0
 	github.com/montanaflynn/stats v0.6.3
-	github.com/pkg/errors v0.9.1
-	github.com/sirupsen/logrus v1.6.0
-	github.com/urfave/cli v1.20.0
-	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
+	github.com/sirupsen/logrus v1.8.1
+	golang.org/x/crypto v0.0.0-20210915214749-c084706c2272
 )
 
 require (
 	github.com/btcsuite/btcd v0.20.1-beta // indirect
-	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
 	github.com/labstack/gommon v0.3.0 // indirect
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect

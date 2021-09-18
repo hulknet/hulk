@@ -5,6 +5,7 @@ import (
 
 	"github.com/asdine/storm/v3"
 	gobCodec "github.com/asdine/storm/v3/codec/gob"
+
 	"github.com/kotfalya/hulk/pkg/store"
 	"github.com/kotfalya/hulk/pkg/utils"
 )

@@ -6,8 +6,8 @@ import (
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
-
-	"github.com/pkg/errors"
+	"errors"
+	"fmt"
 )
 
 type RSAPublicKey rsa.PublicKey
@@ -47,7 +47,7 @@ func unmarshalRsaPublicKey(b []byte) (*RSAPublicKey, error) {
 func rsaPublicKeyToID(k *rsa.PublicKey) (ID, error) {
 	data, err := x509.MarshalPKIXPublicKey(k)
 	if err != nil {
-		return ID{}, errors.Wrap(err, "failed to marshal rsa public key")
+		return ID{}, errors.New(fmt.Sprintf("failed to marshal rsa public key, %v", err))
 	}
 	return sha256.Sum256(data), nil
 }
