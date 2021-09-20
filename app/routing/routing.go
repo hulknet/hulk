@@ -1,21 +1,18 @@
 package routing
 
 import (
-	"github.com/kotfalya/hulk/app/ledger"
 	"github.com/kotfalya/hulk/app/types"
 )
 
 type Table struct {
 	self    types.Peer
-	tick    ledger.Tick
 	buckets []Bucket
 }
 
-func NewRoutingTable(self types.Peer, tick ledger.Tick) *Table {
+func NewRoutingTable(self types.Peer, bitSize []uint8) *Table {
 	t := &Table{
 		self:    self,
-		tick:    tick,
-		buckets: createBuckets(tick),
+		buckets: createBuckets(bitSize),
 	}
 	t.SetPeer(self)
 	return t
@@ -39,16 +36,16 @@ func (rt *Table) bucket(target types.Addr) Bucket {
 	return rt.buckets[len(rt.buckets)-1]
 }
 
-func createBuckets(tick ledger.Tick) []Bucket {
-	buckets := make([]Bucket, len(tick))
+func createBuckets(bitSize []uint8) []Bucket {
+	buckets := make([]Bucket, len(bitSize))
 	bitSizePrefix := uint8(0)
-	for i, t := range tick {
-		if i == len(tick)-1 {
-			buckets[i] = NewFloatBucket(bitSizePrefix, t.BitSize)
+	for i, s := range bitSize {
+		if i == len(bitSize)-1 {
+			buckets[i] = NewFloatBucket(bitSizePrefix, s)
 		} else {
-			buckets[i] = NewFixedBucket(bitSizePrefix, t.BitSize)
+			buckets[i] = NewFixedBucket(bitSizePrefix, s)
 		}
-		bitSizePrefix += t.BitSize
+		bitSizePrefix += s
 	}
 	return buckets
 }

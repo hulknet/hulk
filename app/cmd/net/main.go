@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/kotfalya/hulk/app/ledger"
 	"github.com/kotfalya/hulk/app/net"
 	"github.com/kotfalya/hulk/app/types"
 )
@@ -13,30 +12,36 @@ func main() {
 	//  tmp ----------------------------------
 	//var pk types.PK = types.GenerateSHA()
 	//var token types.Token = types.GenerateSHA()
-	pk, err := types.FromHex("f38157e98d676c4299899118a4a6ecae16f6f1c19013007b35dc7c23f2d52e7a")
+	pk, err := types.IDFromHex("f38157e98d676c4299899118a4a6ecae16f6f1c19013007b35dc7c23f2d52e7a")
 	if err != nil {
 		panic(err)
 	}
-	token, err := types.FromHex("051eaf028faeed1e4a1c7acc68c4e1ad2ec49b283632a65dd632010833f6164e")
+	token, err := types.IDFromHex("051eaf028faeed1e4a1c7acc68c4e1ad2ec49b283632a65dd632010833f6164e")
 	if err != nil {
 		panic(err)
 	}
 
 	id := types.PK(pk).ID()
 
-	b := ledger.Block{
+	b := types.Block{
 		ID:      id,
 		PID:     id,
-		BitSize: 1,
+		BitSize: []byte{1},
 	}
-	t := ledger.Tick{b}
+	t := types.Tick{ID: id}
+	time := types.Time{}
+	time = append(time, t)
+
 	pOut := types.Peer{
 		PK:    pk,
 		Token: token,
 	}
-
+	s := types.State{
+		Block: b,
+		Time:  time,
+	}
 	n := net.NewNet(pOut)
-	n.Init(t)
+	n.Init(s)
 	go func() {
 		panic(n.Start())
 	}()

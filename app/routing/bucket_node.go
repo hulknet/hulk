@@ -7,18 +7,18 @@ import (
 	"github.com/kotfalya/hulk/app/types"
 )
 
-type FloatBucket struct {
+type NodeBucket struct {
 	*BaseBucket
 	peers []types.Peer
 }
 
-func NewFloatBucket(bitSizePrefix uint8, bitSize uint8) *FloatBucket {
-	return &FloatBucket{
+func NewFloatBucket(bitSizePrefix uint8, bitSize uint8) *NodeBucket {
+	return &NodeBucket{
 		BaseBucket: &BaseBucket{bitSize: bitSize, bitSizePrefix: bitSizePrefix},
 	}
 }
 
-func (b *FloatBucket) GetPeer(target types.Addr) types.Peer {
+func (b *NodeBucket) GetPeer(target types.Addr) types.Peer {
 	if len(b.peers) == 1 {
 		return b.peers[0]
 	}
@@ -27,7 +27,7 @@ func (b *FloatBucket) GetPeer(target types.Addr) types.Peer {
 	return b.peers[index]
 }
 
-func (b *FloatBucket) SetPeer(peer types.Peer) {
+func (b *NodeBucket) SetPeer(peer types.Peer) {
 	b.peers = append(b.peers, peer)
 	sort.Sort(peerByAddr(b.peers))
 }

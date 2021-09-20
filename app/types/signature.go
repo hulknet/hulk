@@ -10,10 +10,38 @@ import (
 
 type Sign [65]byte
 
-func (s Sign) PK() PK {
-	var pk PK
-	copy(pk[:], s[32:64])
-	return pk
+func (s Sign) SignWithPK() (sign [65]byte) {
+	copy(sign[:], s[:])
+	return
+}
+
+func (s Sign) Sign() (sign [64]byte) {
+	copy(sign[:], s[:64])
+	return
+}
+
+func (s Sign) PK(hash []byte) (pk PK, err error) {
+	pkSource, err := secp256k1.RecoverPubkey(hash, s[:])
+	if err != nil {
+		return
+	}
+	pk.Write(pkSource)
+
+	return
+}
+
+func (s Sign) CheckSignature(msg []byte) (bool, error) {
+	msgHash := sha3.Sum256(msg)
+	return s.CheckHashSignature(msgHash[:])
+}
+
+func (s Sign) CheckHashSignature(hash []byte) (bool, error) {
+	pk, err := s.PK(hash)
+	if err != nil {
+		return false, err
+	}
+
+	return secp256k1.VerifySignature(pk[:], hash[:], s[:64]), nil
 }
 
 func CheckSignature(msg []byte, sign []byte) (bool, error) {

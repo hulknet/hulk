@@ -6,24 +6,24 @@ import (
 	"github.com/kotfalya/hulk/app/types"
 )
 
-type FixedBucket struct {
+type NetBucket struct {
 	*BaseBucket
 	peers  map[byte]types.Peer
 	bitmap types.Bitmap256
 }
 
-func NewFixedBucket(bitSizePrefix uint8, bitSize uint8) *FixedBucket {
-	return &FixedBucket{
+func NewFixedBucket(bitSizePrefix uint8, bitSize uint8) *NetBucket {
+	return &NetBucket{
 		BaseBucket: &BaseBucket{bitSize: bitSize, bitSizePrefix: bitSizePrefix},
 		peers:      make(map[byte]types.Peer, int(math.Pow(2, float64(bitSize)))),
 	}
 }
 
-func (b *FixedBucket) GetPeer(target types.Addr) types.Peer {
+func (b *NetBucket) GetPeer(target types.Addr) types.Peer {
 	return b.peers[b.bucketAddr(target)]
 }
 
-func (b *FixedBucket) SetPeer(peer types.Peer) {
+func (b *NetBucket) SetPeer(peer types.Peer) {
 	bucketAddr := b.bucketAddr(peer.PK.ID().Addr())
 	if b.bitmap.IsSet(bucketAddr) {
 		return
@@ -32,7 +32,7 @@ func (b *FixedBucket) SetPeer(peer types.Peer) {
 	b.bitmap.Set(bucketAddr)
 }
 
-func (b *FixedBucket) Bitmap() types.Bitmap256 {
+func (b *NetBucket) Bitmap() types.Bitmap256 {
 	return b.bitmap
 }
 

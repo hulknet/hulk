@@ -4,7 +4,8 @@ import "encoding/json"
 
 type MessageHeader struct {
 	ID    ID
-	To    Addr
+	To    IDPrefix
+	From  IDPrefix
 	Token Token
 	Part  Partition
 	Sign  []Sign
@@ -17,8 +18,8 @@ type BaseMessage struct {
 }
 
 type Partition struct {
-	Position uint64
-	Length   uint64
+	Position byte
+	Length   byte
 }
 
 type Replica struct {

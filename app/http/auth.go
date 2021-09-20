@@ -18,7 +18,7 @@ type JWTClaims struct {
 }
 
 func (jc *JWTClaims) ToService() (*Service, error) {
-	id, err := types.FromHex(jc.ID)
+	id, err := types.IDFromHex(jc.ID)
 	if err != nil {
 		return nil, err
 	}
