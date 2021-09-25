@@ -18,16 +18,16 @@ func NewRoutingTable(self types.Peer, bitSize []uint8) *Table {
 	return t
 }
 
-func (rt *Table) GetPeer(target types.Addr) types.Peer {
+func (rt *Table) GetPeer(target types.ShortID) types.Peer {
 	return rt.bucket(target).GetPeer(target)
 }
 
 func (rt *Table) SetPeer(peer types.Peer) {
-	rt.bucket(peer.PK.ID().Addr()).SetPeer(peer)
+	rt.bucket(peer.PK.Prefix()).SetPeer(peer)
 }
 
-func (rt *Table) bucket(target types.Addr) Bucket {
-	cpl := rt.self.PK.ID().Addr().Cpl(target)
+func (rt *Table) bucket(target types.ShortID) Bucket {
+	cpl := types.Cpl(rt.self.PK.Prefix().Bytes(), target.Bytes())
 	for _, b := range rt.buckets {
 		if cpl <= int(b.BitSizePrefix()+b.BitSize()) {
 			return b

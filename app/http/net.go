@@ -3,7 +3,6 @@ package http
 import (
 	"errors"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/kotfalya/hulk/app/types"
@@ -12,7 +11,7 @@ import (
 const (
 	idHeader        = "ID"
 	tokenHeader     = "Token"
-	addrHeader      = "Addr"
+	timeHeader      = "Time"
 	toHeader        = "To"
 	fromHeader      = "From"
 	partHeader      = "Partition"
@@ -26,10 +25,13 @@ func ParseHTTPHeader(header http.Header) (messageHeader types.MessageHeader, err
 	if messageHeader.Sign, err = parseSignature(header.Get(signatureHeader)); err != nil {
 		return
 	}
-	if messageHeader.To, err = parseIDPrefix(header.Get(toHeader)); err != nil {
+	if messageHeader.Time, err = parseTime(header.Get(timeHeader)); err != nil {
 		return
 	}
-	if messageHeader.From, err = parseIDPrefix(header.Get(fromHeader)); err != nil {
+	if messageHeader.To, err = parseShortID(header.Get(toHeader)); err != nil {
+		return
+	}
+	if messageHeader.From, err = parseShortID(header.Get(fromHeader)); err != nil {
 		return
 	}
 	if messageHeader.ID, err = parseID(header.Get(idHeader)); err != nil {
@@ -75,23 +77,6 @@ func parseSignature(signStr string) (sign []types.Sign, err error) {
 	return
 }
 
-func parseAddr(header http.Header) (addr types.Addr, err error) {
-	addrStr := header.Get(addrHeader)
-	if addrStr == "" {
-		err = errors.New(types.ErrGetAddr)
-		return
-	}
-
-	addrInt, err := strconv.ParseUint(addrStr, 10, 64)
-	if err != nil {
-		err = errors.New(types.ErrDecodeAddr)
-		return
-	}
-	addr = types.Addr(addrInt)
-
-	return
-}
-
 func parseID(idStr string) (id types.ID, err error) {
 	if idStr == "" {
 		err = errors.New(types.ErrGetID)
@@ -102,12 +87,29 @@ func parseID(idStr string) (id types.ID, err error) {
 	return
 }
 
-func parseIDPrefix(srcStr string) (id types.IDPrefix, err error) {
-	if srcStr == "" {
-		err = errors.New(types.ErrGetIDPrefix)
+func parseTime(timeStr string) (time types.Time, err error) {
+	if timeStr == "" {
+		err = errors.New(types.ErrGetTime)
 		return
 	}
-	id, err = types.IDPrefixFromHex(srcStr)
+	time, parserErr := types.FromHex(timeStr, 0)
+	if parserErr != nil {
+		err = errors.New(types.ErrDecodeTime)
+		return
+	}
+	if !time.Validate() {
+		err = errors.New(types.ErrInvalidTime)
+		return
+	}
+	return
+}
+
+func parseShortID(srcStr string) (id types.ShortID, err error) {
+	if srcStr == "" {
+		err = errors.New(types.ErrGetShortID)
+		return
+	}
+	id, err = types.ShortIDFromHex(srcStr)
 
 	return
 }

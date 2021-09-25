@@ -4,9 +4,10 @@ import "encoding/json"
 
 type MessageHeader struct {
 	ID    ID
-	To    IDPrefix
-	From  IDPrefix
+	To    ShortID
+	From  ShortID
 	Token Token
+	Time  Time
 	Part  Partition
 	Sign  []Sign
 }

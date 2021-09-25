@@ -2,8 +2,10 @@ package main
 
 import (
 	"bytes"
+	"crypto/ecdsa"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -18,13 +20,18 @@ import (
 
 type MessageHeaderModel struct {
 	ID    string `json:"id"`
-	Addr  string `json:"addr"`
+	To    string `json:"to"`
+	From  string `json:"from"`
 	Token string `json:"token"`
 	Part  string `json:"part"`
 	Body  string `json:"body"`
 }
 
 type SignModel struct {
+	ID   string           `json:"id"`
+	Part string           `json:"part"`
+	To   string           `json:"to"`
+	From string           `json:"from"`
 	Body *json.RawMessage `json:"body"`
 }
 
@@ -103,56 +110,13 @@ func main() {
 	})
 
 	e.POST("/send", func(ctx echo.Context) error {
-		m := new(SendModel)
-		if err := ctx.Bind(m); err != nil {
-			log.Error(err)
-			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-		}
-
-		msgHash := sha3.Sum256([]byte(m.Body))
-		sign, err := crypto.Sign(msgHash[:], pKey)
-		if err != nil {
-			log.Error(err)
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-		}
-
-		client := http.Client{}
-		req, err := http.NewRequest("POST", "http://127.0.0.1:7002", bytes.NewBufferString(m.Body))
-		if err != nil {
-			log.Error(err)
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-		}
-
-		req.Header.Add("ID", m.ID)
-		req.Header.Add("Token", m.Token)
-		req.Header.Add("Addr", m.Addr)
-		req.Header.Add("Signature", hex.EncodeToString(sign))
-		resp, err := client.Do(req)
-		if err != nil {
-			log.Error(err)
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-		}
-
-		err = resp.Body.Close()
-		if err != nil {
-			log.Error(err)
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-		}
-
-		return ctx.JSON(http.StatusOK, echo.Map{
-			"status": resp.Status,
-		})
-	})
-
-	e.POST("/test", func(ctx echo.Context) error {
 		m := new(MessageHeaderModel)
 		if err := ctx.Bind(m); err != nil {
 			log.Error(err)
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
 
-		msgHash := sha3.Sum256([]byte(m.Body))
-		sign, err := crypto.Sign(msgHash[:], pKey)
+		sign, err := signMessage(m.Body, m.ID, m.To, m.From, m.Part, pKey)
 		if err != nil {
 			log.Error(err)
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -168,7 +132,8 @@ func main() {
 
 		req.Header.Add("ID", m.ID)
 		req.Header.Add("Token", m.Token)
-		req.Header.Add("Addr", m.Addr)
+		req.Header.Add("To", m.To)
+		req.Header.Add("From", m.From)
 		req.Header.Add("Partition", m.Part)
 		req.Header.Add("Signature", hex.EncodeToString(sign))
 		resp, err := client.Do(req)
@@ -197,4 +162,56 @@ func main() {
 	})
 
 	fmt.Println(e.Start("127.0.0.1:7009"))
+}
+
+func signMessage(bodyStr, idStr, toStr, fromStr, partStr string, pKey *ecdsa.PrivateKey) ([]byte, error) {
+	id, err := parseID(idStr)
+	if err != nil {
+		return nil, err
+	}
+	to, err := parseID(toStr)
+	if err != nil {
+		return nil, err
+	}
+	from, err := parseID(fromStr)
+	if err != nil {
+		return nil, err
+	}
+	part, err := parsePart(partStr)
+	if err != nil {
+		return nil, err
+	}
+	body, err := types.FromHex(bodyStr, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	data := bytes.NewBuffer(id[:])
+	data.Write(to[:])
+	data.Write(from[:])
+	data.WriteByte(part.Position)
+	data.WriteByte(part.Length)
+	data.Write(body)
+
+	msgHash := sha3.Sum256(data.Bytes())
+	return crypto.Sign(msgHash[:], pKey)
+}
+
+func parseID(idStr string) (id types.ID, err error) {
+	id, err = types.IDFromHex(idStr)
+
+	return
+}
+
+func parsePart(partStr string) (part types.Partition, err error) {
+	partBytes, err := types.FromHex(partStr, 2)
+	if err != nil {
+		err = errors.New(types.ErrDecodePart)
+		return
+	}
+
+	part.Position = partBytes[0]
+	part.Position = partBytes[1]
+
+	return
 }

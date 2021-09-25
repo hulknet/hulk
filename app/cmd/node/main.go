@@ -1,28 +1,5 @@
 package main
 
-import (
-	"github.com/kotfalya/hulk/app/ledger"
-	"github.com/kotfalya/hulk/app/types"
-)
-
-type Node struct {
-	addr  types.Addr
-	pk    types.PK
-	block ledger.Block
-}
-
-type MemoryBlock struct {
-	addr types.Addr
-	rp   types.Permission
-	wp   types.Permission
-}
-
-type StorageBlock struct {
-	addr types.Addr
-	rp   types.Permission
-	wp   types.Permission
-}
-
 func main() {
 
 }

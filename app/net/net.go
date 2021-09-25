@@ -3,7 +3,6 @@ package net
 import (
 	"sync"
 
-	"github.com/kotfalya/hulk/app/ledger"
 	"github.com/kotfalya/hulk/app/routing"
 	"github.com/kotfalya/hulk/app/types"
 )
@@ -26,9 +25,9 @@ func NewNet(self types.Peer) *Net {
 	}
 }
 
-func (n *Net) Init(tick ledger.Tick) {
-	n.table = routing.NewRoutingTable(n.self, tick)
-	n.handler = NewMessageHandler(tick)
+func (n *Net) Init(state types.State) {
+	n.table = routing.NewRoutingTable(n.self, state.Head().BitSize)
+	n.handler = NewMessageHandler(state)
 }
 
 func (n *Net) Start() error {
@@ -39,7 +38,7 @@ func (n *Net) AddPeer(peer types.Peer) {
 	n.table.SetPeer(peer)
 }
 
-func (n *Net) FindPeer(target types.Addr) types.Peer {
+func (n *Net) FindPeer(target types.ShortID) types.Peer {
 	return n.table.GetPeer(target)
 }
 

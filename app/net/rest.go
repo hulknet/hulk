@@ -1,6 +1,7 @@
 package net
 
 import (
+	"encoding/hex"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -41,9 +42,10 @@ func NewRestServer(net *Net, addr string, secret interface{}) *Rest {
 
 	r.echo.GET("/self", func(ctx echo.Context) error {
 		return ctx.JSON(http.StatusOK, echo.Map{
-			"pk":    types.ToHex(r.net.self.PK),
-			"addr":  r.net.self.PK.ID().Addr(),
-			"token": types.ToHex(r.net.self.Token),
+			"pk":       types.ToHex(r.net.self.PK),
+			"pkPrefix": hex.EncodeToString(r.net.self.PK.Prefix().Bytes()),
+			"addr":     hex.EncodeToString(r.net.self.PK.ID().Prefix().Bytes()),
+			"token":    types.ToHex(r.net.self.Token),
 		})
 	})
 

@@ -7,7 +7,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	libHttp "github.com/kotfalya/hulk/app/http"
-	"github.com/kotfalya/hulk/app/types"
 )
 
 type ReceiverHandler struct {
@@ -40,7 +39,7 @@ func (rh *ReceiverHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	correct, err := types.CheckSignature(messageBody, messageHeader.Sign[0][:])
+	correct, err := messageHeader.Sign[0].CheckSignature(messageBody)
 	if err != nil || !correct {
 		log.Error(err)
 		http.Error(w, "signature is invalid", http.StatusForbidden)

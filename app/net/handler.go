@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/kotfalya/hulk/app/ledger"
 	"github.com/kotfalya/hulk/app/types"
 )
 
@@ -17,12 +16,12 @@ type MessageItem struct {
 
 type Message struct {
 	id       types.ID
-	length   uint64
-	received uint64
+	length   byte
+	received byte
 	messages [][]byte
 }
 
-func (m *Message) Update(position uint64, data []byte) bool {
+func (m *Message) Update(position byte, data []byte) bool {
 	if len(m.messages[position]) > 0 {
 		return false
 	}
@@ -66,29 +65,29 @@ func newMessage(mi MessageItem) (m Message) {
 	return
 }
 
-type MessageState struct {
+type MessageChunks struct {
 	messages map[types.ID]Message
 	resolved map[types.ID]struct{}
 }
 
-func newMessageState() *MessageState {
-	return &MessageState{
+func newMessageState() *MessageChunks {
+	return &MessageChunks{
 		messages: make(map[types.ID]Message, 0),
 		resolved: make(map[types.ID]struct{}, 0),
 	}
 }
 
-func (s *MessageState) IsMessageResolved(id types.ID) bool {
+func (s *MessageChunks) IsMessageResolved(id types.ID) bool {
 	_, ok := s.resolved[id]
 	return ok
 }
 
-func (s *MessageState) Resolve(id types.ID) {
+func (s *MessageChunks) Resolve(id types.ID) {
 	s.resolved[id] = struct{}{}
 	delete(s.messages, id)
 }
 
-func (s *MessageState) CreateOrUpdate(mi MessageItem) (m Message) {
+func (s *MessageChunks) CreateOrUpdate(mi MessageItem) (m Message) {
 	m, ok := s.messages[mi.id]
 	if ok {
 		m.Update(mi.part.Position, mi.data)
@@ -103,26 +102,19 @@ func (s *MessageState) CreateOrUpdate(mi MessageItem) (m Message) {
 type Processor func(m Message)
 
 type MessageHandler struct {
-	tickCh       chan ledger.Tick
-	messageCh    chan MessageItem
-	tick         ledger.Tick
-	state        *MessageState
-	stateArchive map[types.ID]*MessageState
-	processor    func(m Message)
+	messageCh chan MessageItem
+	state     types.State
+	chunks    *MessageChunks
+	processor func(m Message)
 }
 
-func NewMessageHandler(tick ledger.Tick) *MessageHandler {
+func NewMessageHandler(state types.State) *MessageHandler {
 	return &MessageHandler{
-		tick:      tick,
-		state:     newMessageState(),
+		state:     state,
+		chunks:    newMessageState(),
 		processor: createProcessor(),
-		tickCh:    make(chan ledger.Tick, 1),
 		messageCh: make(chan MessageItem, 10),
 	}
-}
-
-func (h *MessageHandler) SetTick(tick ledger.Tick) {
-	h.tickCh <- tick
 }
 
 func (h *MessageHandler) Message(id types.ID, part types.Partition, data []byte) {
@@ -132,19 +124,15 @@ func (h *MessageHandler) Message(id types.ID, part types.Partition, data []byte)
 func (h *MessageHandler) Start() error {
 	for {
 		select {
-		case tick := <-h.tickCh:
-			h.stateArchive[h.tick.NodeBlock().ID] = h.state
-			h.state = newMessageState()
-			h.tick = tick
 		case mi := <-h.messageCh:
-			if h.state.IsMessageResolved(mi.id) {
+			if h.chunks.IsMessageResolved(mi.id) {
 				continue
 			}
 
-			m := h.state.CreateOrUpdate(mi)
+			m := h.chunks.CreateOrUpdate(mi)
 			if m.Assembled() {
 				go h.processor(m)
-				h.state.Resolve(m.id)
+				h.chunks.Resolve(m.id)
 			}
 		}
 	}

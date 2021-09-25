@@ -19,16 +19,16 @@ func NewFixedBucket(bitSizePrefix uint8, bitSize uint8) *NetBucket {
 	}
 }
 
-func (b *NetBucket) GetPeer(target types.Addr) types.Peer {
-	return b.peers[b.bucketAddr(target)]
+func (b *NetBucket) GetPeer(target types.ShortID) types.Peer {
+	return b.peers[b.bucketAddr(target.Uint64())]
 }
 
 func (b *NetBucket) SetPeer(peer types.Peer) {
-	bucketAddr := b.bucketAddr(peer.PK.ID().Addr())
+	bucketAddr := b.bucketAddr(peer.PK.ID().Uint64())
 	if b.bitmap.IsSet(bucketAddr) {
 		return
 	}
-	b.peers[b.bucketAddr(peer.PK.ID().Addr())] = peer
+	b.peers[b.bucketAddr(peer.PK.ID().Uint64())] = peer
 	b.bitmap.Set(bucketAddr)
 }
 
@@ -36,7 +36,7 @@ func (b *NetBucket) Bitmap() types.Bitmap256 {
 	return b.bitmap
 }
 
-func (b *BaseBucket) bucketAddr(target types.Addr) byte {
+func (b *BaseBucket) bucketAddr(target uint64) byte {
 	leftShift := b.BitSizePrefix()
 	rightShift := 64 - leftShift - b.BitSize()
 	return byte((target << leftShift) >> rightShift)

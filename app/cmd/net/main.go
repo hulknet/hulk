@@ -29,17 +29,24 @@ func main() {
 		BitSize: []byte{1},
 	}
 	t := types.Tick{ID: id}
-	time := types.Time{}
-	time = append(time, t)
+
+	var time types.Time
+	time = append(time, b.ID.Prefix().Bytes()...)
+	time = append(time, t.ID.Prefix().Bytes()...)
+	time = append(time, byte(1))
+
+	var blocks []types.Block
+	blocks = append(blocks, b)
+
+	var ticks []types.Tick
+	ticks = append(ticks, t)
 
 	pOut := types.Peer{
 		PK:    pk,
 		Token: token,
 	}
-	s := types.State{
-		Block: b,
-		Time:  time,
-	}
+	s := types.CreateState(time, blocks, ticks)
+
 	n := net.NewNet(pOut)
 	n.Init(s)
 	go func() {
