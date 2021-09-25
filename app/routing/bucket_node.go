@@ -18,7 +18,7 @@ func NewFloatBucket(bitSizePrefix uint8, bitSize uint8) *NodeBucket {
 	}
 }
 
-func (b *NodeBucket) GetPeer(target types.ShortID) types.Peer {
+func (b *NodeBucket) GetPeer(target types.ID64) types.Peer {
 	if len(b.peers) == 1 {
 		return b.peers[0]
 	}
@@ -36,4 +36,4 @@ type peerByAddr []types.Peer
 
 func (a peerByAddr) Len() int           { return len(a) }
 func (a peerByAddr) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a peerByAddr) Less(i, j int) bool { return a[i].PK.ID().Uint64() < a[j].PK.ID().Uint64() }
+func (a peerByAddr) Less(i, j int) bool { return a[i].PK.ID256().Uint64() < a[j].PK.ID256().Uint64() }

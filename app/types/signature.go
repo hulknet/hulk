@@ -8,19 +8,19 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
-type Sign [65]byte
+type Sign520 [65]byte
 
-func (s Sign) SignWithPK() (sign [65]byte) {
+func (s Sign520) SignWithPK() (sign [65]byte) {
 	copy(sign[:], s[:])
 	return
 }
 
-func (s Sign) Sign() (sign [64]byte) {
+func (s Sign520) Sign512() (sign [64]byte) {
 	copy(sign[:], s[:64])
 	return
 }
 
-func (s Sign) PK(hash []byte) (pk PK, err error) {
+func (s Sign520) PK(hash []byte) (pk PK, err error) {
 	pkSource, err := secp256k1.RecoverPubkey(hash, s[:])
 	if err != nil {
 		return
@@ -30,12 +30,12 @@ func (s Sign) PK(hash []byte) (pk PK, err error) {
 	return
 }
 
-func (s Sign) CheckSignature(msg []byte) (bool, error) {
+func (s Sign520) CheckSignature(msg []byte) (bool, error) {
 	msgHash := sha3.Sum256(msg)
 	return s.CheckHashSignature(msgHash[:])
 }
 
-func (s Sign) CheckHashSignature(hash []byte) (bool, error) {
+func (s Sign520) CheckHashSignature(hash []byte) (bool, error) {
 	pk, err := s.PK(hash)
 	if err != nil {
 		return false, err
@@ -69,16 +69,16 @@ func CheckStringSignature(msg []byte, strSign string) (bool, error) {
 	return secp256k1.VerifySignature(pk, msgHash[:], sign[:64]), nil
 }
 
-func SignFromHex(s string) (Sign, error) {
+func SignFromHex(s string) (Sign520, error) {
 	data, err := hex.DecodeString(s)
 	if err != nil {
-		return Sign{}, errors.New(ErrDecodeSign)
+		return Sign520{}, errors.New(ErrDecodeSign520)
 	}
 
-	var sign Sign
+	var sign Sign520
 	bitLen := copy(sign[:], data[:65])
 	if bitLen != 65 {
-		return Sign{}, errors.New(ErrSizeSign)
+		return Sign520{}, errors.New(ErrSizeSign520)
 	}
 
 	return sign, nil

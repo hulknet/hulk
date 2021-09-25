@@ -7,8 +7,9 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
-	"github.com/kotfalya/hulk/app/types"
 	"github.com/kotfalya/hulk/pkg/utils"
+
+	"github.com/kotfalya/hulk/app/types"
 )
 
 type JWTClaims struct {
@@ -18,7 +19,7 @@ type JWTClaims struct {
 }
 
 func (jc *JWTClaims) ToService() (*Service, error) {
-	id, err := types.IDFromHex(jc.ID)
+	id, err := types.ID256FromHex(jc.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +27,7 @@ func (jc *JWTClaims) ToService() (*Service, error) {
 }
 
 type Service struct {
-	ID   types.ID
+	ID   types.ID256
 	Type TokenType
 }
 

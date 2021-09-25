@@ -15,13 +15,13 @@ func Random() int {
 	return rd.Int()
 }
 
-func GenerateSHA() ID {
+func GenerateSHA() ID256 {
 	bs := make([]byte, 4)
 	binary.LittleEndian.PutUint32(bs, uint32(Random()))
 	return sha256.Sum256(bs)
 }
 
-func GenerateSHAFrom(source string) ID {
+func GenerateSHAFrom(source string) ID256 {
 	bs := []byte(source)
 	return sha256.Sum256(bs)
 }

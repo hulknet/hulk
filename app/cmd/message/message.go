@@ -197,8 +197,8 @@ func signMessage(bodyStr, idStr, toStr, fromStr, partStr string, pKey *ecdsa.Pri
 	return crypto.Sign(msgHash[:], pKey)
 }
 
-func parseID(idStr string) (id types.ID, err error) {
-	id, err = types.IDFromHex(idStr)
+func parseID(idStr string) (id types.ID256, err error) {
+	id, err = types.ID256FromHex(idStr)
 
 	return
 }

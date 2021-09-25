@@ -7,26 +7,25 @@ import (
 )
 
 const (
-	ErrDecodeByte32 = "decode of Byte32 failed"
-	ErrDecodeByte8  = "decode of Byte8 failed"
-	ErrDecodeByte   = "decode of ByteArray failed"
-	ErrDecodeTime   = "decode of Time failed"
-	ErrInvalidTime  = "object Time is invalid"
-	ErrSizeByte32   = "size of Byte32 is invalid"
-	ErrSizeByte8    = "size of Byte8 is invalid"
-	ErrSizeByte     = "size of ByteArray is invalid"
-	ErrSizeSign     = "size of Sign is invalid"
+	ErrDecodeByte32  = "decode of Byte32 failed"
+	ErrDecodeByte8   = "decode of Byte8 failed"
+	ErrDecodeByte    = "decode of ByteArray failed"
+	ErrDecodeTime    = "decode of Time failed"
+	ErrDecodeSign520 = "decode of Signature failed"
+	ErrDecodePart    = "decode of Partition failed"
+	ErrDecodeToken   = "decode of Token failed"
 
-	ErrGetToken    = "failed to get Token from request header"
-	ErrDecodeToken = "decode of Token failed"
-	ErrGetAddr     = "failed to get Address  from request header"
-	ErrGetID       = "failed to get ID from request header"
-	ErrGetTime     = "failed to get Time from request header"
-	ErrGetShortID  = "failed to get Short ID from request header"
-	ErrDecodeAddr  = "decode of Address failed"
-	ErrGetSign     = "failed to get Signature from request header"
-	ErrDecodeSign  = "decode of Signature failed"
-	ErrDecodePart  = "decode of Partition failed"
+	ErrInvalidTime = "object Time is invalid"
+	ErrSizeByte32  = "size of Byte32 is invalid"
+	ErrSizeByte8   = "size of Byte8 is invalid"
+	ErrSizeByte    = "size of ByteArray is invalid"
+	ErrSizeSign520 = "size of Sign520 is invalid"
+
+	ErrGetToken = "failed to get Token from request header"
+	ErrGetID256 = "failed to get ID256 from request header"
+	ErrGetTime  = "failed to get Time from request header"
+	ErrGetID64  = "failed to get ID64 from request header"
+	ErrGetSign  = "failed to get Signature from request header"
 )
 
 type Token [32]byte
@@ -40,35 +39,35 @@ func (p Peer) Equal(other Peer) bool {
 	return p.PK == other.PK
 }
 
-type ID [32]byte
+type ID256 [32]byte
 
-func (i ID) IsEmpty() bool {
-	var empty ID
+func (i ID256) IsEmpty() bool {
+	var empty ID256
 	return i == empty
 }
 
-func (i ID) Uint64() uint64 {
+func (i ID256) Uint64() uint64 {
 	return binary.BigEndian.Uint64(i[:8])
 }
 
-func (i ID) Prefix() (prefix ShortID) {
+func (i ID256) ID64() (prefix ID64) {
 	copy(prefix[:], i[:8])
 	return
 }
 
-type ShortID [8]byte
+type ID64 [8]byte
 
-func (ip ShortID) Bytes() []byte {
+func (ip ID64) Bytes() []byte {
 	return ip[:]
 }
 
-func (ip ShortID) Uint64() uint64 {
+func (ip ID64) Uint64() uint64 {
 	return binary.BigEndian.Uint64(ip[:])
 }
 
 type PK [32]byte
 
-func (p PK) ID() (id ID) {
+func (p PK) ID256() (id ID256) {
 	copy(id[:], p[:])
 	return id
 }
@@ -77,8 +76,8 @@ func (p PK) Bytes() []byte {
 	return p[:]
 }
 
-func (p PK) Prefix() (prefix ShortID) {
-	copy(prefix[:], p[:])
+func (p PK) ID64() (id ID64) {
+	copy(id[:], p[:])
 	return
 }
 
@@ -103,7 +102,7 @@ func FromHex(s string, byteLen int) ([]byte, error) {
 	return data, nil
 }
 
-func IDFromHex(s string) ([32]byte, error) {
+func ID256FromHex(s string) ([32]byte, error) {
 	data, err := hex.DecodeString(s)
 	if err != nil {
 		return [32]byte{}, errors.New(ErrDecodeByte32)
@@ -118,13 +117,13 @@ func IDFromHex(s string) ([32]byte, error) {
 	return id, nil
 }
 
-func ShortIDFromHex(s string) (idPrefix ShortID, err error) {
+func ID64FromHex(s string) (id ID64, err error) {
 	data, err := hex.DecodeString(s)
 	if err != nil {
-		return idPrefix, errors.New(ErrDecodeByte8)
+		return id, errors.New(ErrDecodeByte8)
 	}
 
-	bitLen := copy(idPrefix[:], data[:8])
+	bitLen := copy(id[:], data[:8])
 	if bitLen != 8 {
 		err = errors.New(ErrSizeByte8)
 	}

@@ -43,8 +43,8 @@ func NewRestServer(net *Net, addr string, secret interface{}) *Rest {
 	r.echo.GET("/self", func(ctx echo.Context) error {
 		return ctx.JSON(http.StatusOK, echo.Map{
 			"pk":       types.ToHex(r.net.self.PK),
-			"pkPrefix": hex.EncodeToString(r.net.self.PK.Prefix().Bytes()),
-			"addr":     hex.EncodeToString(r.net.self.PK.ID().Prefix().Bytes()),
+			"pkPrefix": hex.EncodeToString(r.net.self.PK.ID64().Bytes()),
+			"addr":     hex.EncodeToString(r.net.self.PK.ID256().ID64().Bytes()),
 			"token":    types.ToHex(r.net.self.Token),
 		})
 	})

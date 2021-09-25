@@ -9,13 +9,13 @@ import (
 )
 
 type MessageItem struct {
-	id   types.ID
+	id   types.ID256
 	part types.Partition
 	data []byte
 }
 
 type Message struct {
-	id       types.ID
+	id       types.ID256
 	length   byte
 	received byte
 	messages [][]byte
@@ -66,23 +66,23 @@ func newMessage(mi MessageItem) (m Message) {
 }
 
 type MessageChunks struct {
-	messages map[types.ID]Message
-	resolved map[types.ID]struct{}
+	messages map[types.ID256]Message
+	resolved map[types.ID256]struct{}
 }
 
 func newMessageState() *MessageChunks {
 	return &MessageChunks{
-		messages: make(map[types.ID]Message, 0),
-		resolved: make(map[types.ID]struct{}, 0),
+		messages: make(map[types.ID256]Message, 0),
+		resolved: make(map[types.ID256]struct{}, 0),
 	}
 }
 
-func (s *MessageChunks) IsMessageResolved(id types.ID) bool {
+func (s *MessageChunks) IsMessageResolved(id types.ID256) bool {
 	_, ok := s.resolved[id]
 	return ok
 }
 
-func (s *MessageChunks) Resolve(id types.ID) {
+func (s *MessageChunks) Resolve(id types.ID256) {
 	s.resolved[id] = struct{}{}
 	delete(s.messages, id)
 }
@@ -117,7 +117,7 @@ func NewMessageHandler(state types.State) *MessageHandler {
 	}
 }
 
-func (h *MessageHandler) Message(id types.ID, part types.Partition, data []byte) {
+func (h *MessageHandler) Message(id types.ID256, part types.Partition, data []byte) {
 	h.messageCh <- MessageItem{id, part, data}
 }
 

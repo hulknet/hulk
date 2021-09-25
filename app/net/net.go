@@ -38,7 +38,7 @@ func (n *Net) AddPeer(peer types.Peer) {
 	n.table.SetPeer(peer)
 }
 
-func (n *Net) FindPeer(target types.ShortID) types.Peer {
+func (n *Net) FindPeer(target types.ID64) types.Peer {
 	return n.table.GetPeer(target)
 }
 

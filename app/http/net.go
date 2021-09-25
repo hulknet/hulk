@@ -50,7 +50,7 @@ func parseToken(tokenStr string) (token types.Token, err error) {
 		return
 	}
 
-	token, err = types.IDFromHex(tokenStr)
+	token, err = types.ID256FromHex(tokenStr)
 	if err != nil {
 		err = errors.New(types.ErrDecodeToken)
 		return
@@ -59,7 +59,7 @@ func parseToken(tokenStr string) (token types.Token, err error) {
 	return
 }
 
-func parseSignature(signStr string) (sign []types.Sign, err error) {
+func parseSignature(signStr string) (sign []types.Sign520, err error) {
 	if signStr == "" {
 		err = errors.New(types.ErrGetSign)
 		return
@@ -68,7 +68,7 @@ func parseSignature(signStr string) (sign []types.Sign, err error) {
 	for _, s := range strings.Split(signStr, ",") {
 		signItem, er := types.SignFromHex(s)
 		if er != nil {
-			err = errors.New(types.ErrDecodeSign)
+			err = errors.New(types.ErrDecodeSign520)
 			return
 		}
 		sign = append(sign, signItem)
@@ -77,12 +77,12 @@ func parseSignature(signStr string) (sign []types.Sign, err error) {
 	return
 }
 
-func parseID(idStr string) (id types.ID, err error) {
+func parseID(idStr string) (id types.ID256, err error) {
 	if idStr == "" {
-		err = errors.New(types.ErrGetID)
+		err = errors.New(types.ErrGetID256)
 		return
 	}
-	id, err = types.IDFromHex(idStr)
+	id, err = types.ID256FromHex(idStr)
 
 	return
 }
@@ -104,12 +104,12 @@ func parseTime(timeStr string) (time types.Time, err error) {
 	return
 }
 
-func parseShortID(srcStr string) (id types.ShortID, err error) {
+func parseShortID(srcStr string) (id types.ID64, err error) {
 	if srcStr == "" {
-		err = errors.New(types.ErrGetShortID)
+		err = errors.New(types.ErrGetID64)
 		return
 	}
-	id, err = types.ShortIDFromHex(srcStr)
+	id, err = types.ID64FromHex(srcStr)
 
 	return
 }
