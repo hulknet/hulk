@@ -19,13 +19,14 @@ import (
 )
 
 type MessageHeaderModel struct {
-	ID    string `json:"id"`
-	To    string `json:"to"`
-	From  string `json:"from"`
-	Time  string `json:"time"`
-	Token string `json:"token"`
-	Part  string `json:"part"`
-	Body  string `json:"body"`
+	ID      string `json:"id"`
+	BlockID string `json:"block"`
+	To      string `json:"to"`
+	From    string `json:"from"`
+	Time    string `json:"time"`
+	Token   string `json:"token"`
+	Part    string `json:"part"`
+	Body    string `json:"body"`
 }
 
 type SignModel struct {
@@ -118,7 +119,7 @@ func main() {
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
 
-		sign, err := signMessage(m.Body, m.ID, m.To, m.From, m.Time, m.Part, ecpk.ECPrivateKey())
+		sign, err := signMessage(m.Body, m.BlockID, m.ID, m.To, m.From, m.Time, m.Part, ecpk.ECPrivateKey())
 		if err != nil {
 			log.Error(err)
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -133,6 +134,7 @@ func main() {
 		}
 
 		req.Header.Add("ID", m.ID)
+		req.Header.Add("Block", m.BlockID)
 		req.Header.Add("Token", m.Token)
 		req.Header.Add("To", m.To)
 		req.Header.Add("From", m.From)
@@ -166,8 +168,12 @@ func main() {
 	fmt.Println(e.Start("127.0.0.1:7009"))
 }
 
-func signMessage(bodyStr, idStr, toStr, fromStr, timeStr, partStr string, pKey *ecdsa.PrivateKey) ([]byte, error) {
+func signMessage(bodyStr, idStr, blockIdStr, toStr, fromStr, timeStr, partStr string, pKey *ecdsa.PrivateKey) ([]byte, error) {
 	id, err := parseID(idStr)
+	if err != nil {
+		return nil, err
+	}
+	blockId, err := parseID(blockIdStr)
 	if err != nil {
 		return nil, err
 	}
@@ -193,6 +199,7 @@ func signMessage(bodyStr, idStr, toStr, fromStr, timeStr, partStr string, pKey *
 	}
 
 	data := bytes.NewBuffer(id[:])
+	data.Write(blockId[:])
 	data.Write(to[:])
 	data.Write(from[:])
 	data.Write(time[:])
@@ -204,8 +211,8 @@ func signMessage(bodyStr, idStr, toStr, fromStr, timeStr, partStr string, pKey *
 	return crypto.Sign(msgHash[:], pKey)
 }
 
-func parseID(idStr string) (id types.ID256, err error) {
-	id, err = types.ID256FromHex(idStr)
+func parseID(idStr string) (id types.ID64, err error) {
+	id, err = types.ID64FromHex(idStr)
 
 	return
 }

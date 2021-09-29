@@ -52,6 +52,7 @@ func (rh *ReceiverHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := bytes.NewBuffer(messageHeader.ID.Bytes())
+	data.Write(messageHeader.BlockID.Bytes())
 	data.Write(messageHeader.To.Bytes())
 	data.Write(messageHeader.From.Bytes())
 	data.Write(messageHeader.Time.Bytes())
