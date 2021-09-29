@@ -11,6 +11,7 @@ import (
 const (
 	idHeader        = "ID"
 	tokenHeader     = "Token"
+	blockHeader     = "Block"
 	timeHeader      = "Time"
 	toHeader        = "To"
 	fromHeader      = "From"
@@ -22,16 +23,19 @@ func ParseHTTPHeader(header http.Header) (messageHeader types.MessageHeader, err
 	if messageHeader.Token, err = parseToken(header.Get(tokenHeader)); err != nil {
 		return
 	}
+	if messageHeader.BlockID, err = parseID(header.Get(blockHeader)); err != nil {
+		return
+	}
 	if messageHeader.Sign, err = parseSignature(header.Get(signatureHeader)); err != nil {
 		return
 	}
 	if messageHeader.Time, err = parseTime(header.Get(timeHeader)); err != nil {
 		return
 	}
-	if messageHeader.To, err = parseShortID(header.Get(toHeader)); err != nil {
+	if messageHeader.To, err = parseID(header.Get(toHeader)); err != nil {
 		return
 	}
-	if messageHeader.From, err = parseShortID(header.Get(fromHeader)); err != nil {
+	if messageHeader.From, err = parseID(header.Get(fromHeader)); err != nil {
 		return
 	}
 	if messageHeader.ID, err = parseID(header.Get(idHeader)); err != nil {
@@ -77,16 +81,6 @@ func parseSignature(signStr string) (sign []types.Sign520, err error) {
 	return
 }
 
-func parseID(idStr string) (id types.ID256, err error) {
-	if idStr == "" {
-		err = errors.New(types.ErrGetID256)
-		return
-	}
-	id, err = types.ID256FromHex(idStr)
-
-	return
-}
-
 func parseTime(timeStr string) (time types.Time, err error) {
 	if timeStr == "" {
 		err = errors.New(types.ErrGetTime)
@@ -104,9 +98,9 @@ func parseTime(timeStr string) (time types.Time, err error) {
 	return
 }
 
-func parseShortID(srcStr string) (id types.ID64, err error) {
+func parseID(srcStr string) (id types.ID64, err error) {
 	if srcStr == "" {
-		err = errors.New(types.ErrGetID64)
+		err = errors.New(types.ErrGetID)
 		return
 	}
 	id, err = types.ID64FromHex(srcStr)

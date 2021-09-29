@@ -24,11 +24,11 @@ func (b *NetBucket) GetPeer(target types.ID64) types.Peer {
 }
 
 func (b *NetBucket) SetPeer(peer types.Peer) {
-	bucketAddr := b.bucketAddr(peer.PK.ID256().Uint64())
+	bucketAddr := b.bucketAddr(peer.Pub.ID256().Uint64())
 	if b.bitmap.IsSet(bucketAddr) {
 		return
 	}
-	b.peers[b.bucketAddr(peer.PK.ID256().Uint64())] = peer
+	b.peers[b.bucketAddr(peer.Pub.ID256().Uint64())] = peer
 	b.bitmap.Set(bucketAddr)
 }
 

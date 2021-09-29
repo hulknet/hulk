@@ -1,7 +1,6 @@
 package net
 
 import (
-	"encoding/hex"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -11,18 +10,18 @@ import (
 )
 
 type Rest struct {
-	echo   *echo.Echo
-	net    *Net
-	addr   string
-	secret interface{}
+	echo    *echo.Echo
+	netCont *Container
+	addr    string
+	secret  interface{}
 }
 
-func NewRestServer(net *Net, addr string, secret interface{}) *Rest {
+func NewRestServer(netCont *Container, addr string, secret interface{}) *Rest {
 	r := &Rest{
-		echo:   echo.New(),
-		net:    net,
-		addr:   addr,
-		secret: secret,
+		echo:    echo.New(),
+		netCont: netCont,
+		addr:    addr,
+		secret:  secret,
 	}
 
 	r.echo.Use(libHttp.RegisterJWT(secret))
@@ -35,17 +34,17 @@ func NewRestServer(net *Net, addr string, secret interface{}) *Rest {
 
 	r.echo.GET("/token", func(ctx echo.Context) error {
 		return ctx.JSON(http.StatusOK, echo.Map{
-			"id":   types.ToHex(libHttp.ServiceFromContext(ctx).ID),
+			"id":   types.ID256ToHex(libHttp.ServiceFromContext(ctx).ID),
 			"type": libHttp.TokenToString(libHttp.ServiceFromContext(ctx).Type),
 		})
 	})
 
 	r.echo.GET("/self", func(ctx echo.Context) error {
 		return ctx.JSON(http.StatusOK, echo.Map{
-			"pk":       types.ToHex(r.net.self.PK),
-			"pkPrefix": hex.EncodeToString(r.net.self.PK.ID64().Bytes()),
-			"addr":     hex.EncodeToString(r.net.self.PK.ID256().ID64().Bytes()),
-			"token":    types.ToHex(r.net.self.Token),
+			//"pk":       types.ID256ToHex(r.net.self.Pub.ID256()),
+			//"pkPrefix": hex.EncodeToString(r.net.self.Pub.ID().Bytes()),
+			//"addr":     hex.EncodeToString(r.net.self.Pub.ID256().ID().Bytes()),
+			//"token":    types.ID256ToHex(r.net.self.Token),
 		})
 	})
 

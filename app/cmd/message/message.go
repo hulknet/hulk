@@ -22,6 +22,7 @@ type MessageHeaderModel struct {
 	ID    string `json:"id"`
 	To    string `json:"to"`
 	From  string `json:"from"`
+	Time  string `json:"time"`
 	Token string `json:"token"`
 	Part  string `json:"part"`
 	Body  string `json:"body"`
@@ -32,6 +33,7 @@ type SignModel struct {
 	Part string           `json:"part"`
 	To   string           `json:"to"`
 	From string           `json:"from"`
+	Time string           `json:"time"`
 	Body *json.RawMessage `json:"body"`
 }
 
@@ -48,7 +50,7 @@ type SendModel struct {
 }
 
 func main() {
-	pKey, err := types.DecodeDefaultPrivateKey()
+	ecpk, err := types.HexToECKey("90313109591dea4b6e4f4145c7f0124ebf05079b43327d06201ae746a2282ef3")
 	if err != nil {
 		panic(err)
 	}
@@ -69,7 +71,7 @@ func main() {
 		}
 
 		msgHash := sha3.Sum256(*m.Body)
-		sign, err := crypto.Sign(msgHash[:], pKey)
+		sign, err := crypto.Sign(msgHash[:], ecpk.ECPrivateKey())
 		if err != nil {
 			log.Error(err)
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -116,7 +118,7 @@ func main() {
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
 
-		sign, err := signMessage(m.Body, m.ID, m.To, m.From, m.Part, pKey)
+		sign, err := signMessage(m.Body, m.ID, m.To, m.From, m.Time, m.Part, ecpk.ECPrivateKey())
 		if err != nil {
 			log.Error(err)
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -164,7 +166,7 @@ func main() {
 	fmt.Println(e.Start("127.0.0.1:7009"))
 }
 
-func signMessage(bodyStr, idStr, toStr, fromStr, partStr string, pKey *ecdsa.PrivateKey) ([]byte, error) {
+func signMessage(bodyStr, idStr, toStr, fromStr, timeStr, partStr string, pKey *ecdsa.PrivateKey) ([]byte, error) {
 	id, err := parseID(idStr)
 	if err != nil {
 		return nil, err
@@ -181,6 +183,10 @@ func signMessage(bodyStr, idStr, toStr, fromStr, partStr string, pKey *ecdsa.Pri
 	if err != nil {
 		return nil, err
 	}
+	time, err := types.FromHex(timeStr, 0)
+	if err != nil {
+		return nil, err
+	}
 	body, err := types.FromHex(bodyStr, 0)
 	if err != nil {
 		return nil, err
@@ -189,6 +195,7 @@ func signMessage(bodyStr, idStr, toStr, fromStr, partStr string, pKey *ecdsa.Pri
 	data := bytes.NewBuffer(id[:])
 	data.Write(to[:])
 	data.Write(from[:])
+	data.Write(time[:])
 	data.WriteByte(part.Position)
 	data.WriteByte(part.Length)
 	data.Write(body)

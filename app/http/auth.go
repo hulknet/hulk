@@ -7,8 +7,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
-	"github.com/kotfalya/hulk/pkg/utils"
-
 	"github.com/kotfalya/hulk/app/types"
 )
 
@@ -78,7 +76,7 @@ func TokenToString(token TokenType) string {
 
 func GenerateToken(key interface{}, tokenType TokenType) (string, error) {
 	claims := &JWTClaims{
-		utils.GenerateSHA().Hex(),
+		types.ID256ToHex(types.GenerateSHA()),
 		tokenType,
 		jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),

@@ -3,13 +3,14 @@ package types
 import "encoding/json"
 
 type MessageHeader struct {
-	ID    ID256
-	To    ID64
-	From  ID64
-	Token Token
-	Time  Time
-	Part  Partition
-	Sign  []Sign520
+	ID      ID64
+	To      ID64
+	From    ID64
+	Token   Token
+	BlockID ID64
+	Time    Time
+	Part    Partition
+	Sign    []Sign520
 }
 
 type BaseMessage struct {

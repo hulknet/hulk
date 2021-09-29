@@ -10,29 +10,45 @@ import (
 
 func main() {
 	//  tmp ----------------------------------
-	//var pk types.PK = types.GenerateSHA()
+	//var pk types.Pub = types.GenerateSHA()
 	//var token types.Token = types.GenerateSHA()
-	pk, err := types.ID256FromHex("f38157e98d676c4299899118a4a6ecae16f6f1c19013007b35dc7c23f2d52e7a")
+	ecpk, err := types.HexToECKey("90313109591dea4b6e4f4145c7f0124ebf05079b43327d06201ae746a2282ef3")
 	if err != nil {
 		panic(err)
 	}
+	//pk, err := types.ID256FromHex("f38157e98d676c4299899118a4a6ecae16f6f1c19013007b35dc7c23f2d52e7a")
+	//if err != nil {
+	//	panic(err)
+	//}
 	token, err := types.ID256FromHex("051eaf028faeed1e4a1c7acc68c4e1ad2ec49b283632a65dd632010833f6164e")
 	if err != nil {
 		panic(err)
 	}
 
-	id := types.PK(pk).ID256()
+	pk := ecpk.Pub()
+
+	id := pk.ID256()
 
 	b := types.Block{
-		ID:      id,
-		PID:     id,
+		ID:      id.ID64(),
+		ID256:   id,
 		BitSize: []byte{1},
+		Status:  types.BlockStatusHead,
 	}
-	t := types.Tick{ID: id}
+	t := types.Tick{
+		ID:     id.ID64(),
+		ID256:  id,
+		Count:  0,
+		Status: types.TickStatusHead,
+	}
+
+	p := types.Peer{
+		Pub:   pk,
+		Token: token,
+	}
 
 	var time types.Time
-	time = append(time, b.ID.ID64().Bytes()...)
-	time = append(time, t.ID.ID64().Bytes()...)
+	time = append(time, t.ID.Bytes()...)
 	time = append(time, byte(1))
 
 	var blocks []types.Block
@@ -41,31 +57,25 @@ func main() {
 	var ticks []types.Tick
 	ticks = append(ticks, t)
 
-	pOut := types.Peer{
-		PK:    pk,
-		Token: token,
-	}
-	s := types.CreateState(time, blocks, ticks)
+	s := types.CreateState(time, b, ticks, p, ecpk, token)
 
-	n := net.NewNet(pOut)
-	n.Init(s)
-	go func() {
-		panic(n.Start())
-	}()
+	netCont := &net.Container{}
+	netCont.SetState(s)
 
+	//pk for internal communication
 	pKey, err := types.DecodeDefaultPublicKey()
 	if err != nil {
 		panic(err)
 	}
 
-	r := net.NewRestServer(n, "127.0.0.1:7001", pKey)
+	r := net.NewRestServer(netCont, "127.0.0.1:7001", pKey)
 
 	errChan := make(chan error)
 	go func() {
 		errChan <- r.Listen()
 	}()
 	go func() {
-		errChan <- http.ListenAndServe("127.0.0.1:7002", net.NewReceiverHandler(n))
+		errChan <- http.ListenAndServe("127.0.0.1:7002", net.NewReceiverHandler(netCont))
 	}()
 
 	select {

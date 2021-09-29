@@ -1,65 +1,89 @@
 package types
 
 const (
-	BlockShortIDByteLen = 8
-	TickByteLen         = 9
-	IndexShift          = 1
+	TickByteLen = 9
+	IndexShift  = 1
 )
 
-type State struct {
-	time   Time
-	ticks  map[ID64]Tick
-	blocks map[ID64]Block
+type UpdateState interface {
+	UpdateState(state State)
 }
 
-func CreateState(time Time, blocks []Block, ticks []Tick) State {
+type State struct {
+	time  Time
+	ticks map[ID64]Tick
+	block Block
+	peer  Peer
+	key   *ECKey
+	token Token
+}
+
+func CreateState(time Time, block Block, ticks []Tick, peer Peer, key *ECKey, token Token) State {
 	state := State{
-		time: time,
+		time:  time,
+		block: block,
+		peer:  peer,
+		key:   key,
+		token: token,
 	}
 
-	for _, block := range blocks {
-		state.blocks[block.ID.ID64()] = block
-	}
 	for _, tick := range ticks {
-		state.ticks[tick.ID.ID64()] = tick
+		state.ticks[tick.ID] = tick
 	}
 
 	return state
 }
 
-func (s *State) Head() Block {
-	return s.blocks[s.time.BlockShortID()]
-}
-
-func (s *State) Time() Time {
+func (s State) Time() Time {
 	return s.time
 }
 
-func (s *State) Block(shortID ID64) Block {
-	return s.blocks[shortID]
+func (s State) Peer() Peer {
+	return s.peer
 }
 
-func (s *State) Tick(shortID ID64) Tick {
-	return s.ticks[shortID]
+func (s State) Block() Block {
+	return s.block
 }
 
-func (s *State) Validate(time Time, buckets int) bool {
-	block, ok := s.blocks[time.BlockShortID()]
-	if !ok || !block.Status.Active() {
-		return false
-	}
-	for i := 0; i < buckets; i++ {
-		tick, ok := s.ticks[time.TickShortID(i)]
-		if !ok || !tick.Status.Active() {
+func (s State) ID() ID64 {
+	return s.block.ID
+}
+
+func (s State) FindTick(id ID64) (tick Tick, ok bool) {
+	tick, ok = s.ticks[id]
+	return
+}
+
+func (s State) ValidateTime(from ID64, time Time) bool {
+	//block, ok := s.blocks[time.BlockID64()]
+	//if !ok || !block.Status.IsActive() {
+	//	return false
+	//}
+
+	cpl := Cpl(from.Bytes(), s.peer.Pub.ID().Bytes())
+	for i, size := range s.block.BitSize {
+		tick, ok := s.ticks[time.TickID(i)]
+		if !ok || !tick.Status.IsActive() {
 			return false
 		}
+		if cpl <= int(size) {
+			break
+		}
+		cpl -= int(size)
 	}
 	return true
 }
 
+func (s State) LastCommonTick(from ID64, time Time) (tick Tick, ok bool) {
+
+	//cpl := Cpl(from.Bytes(), s.blockIdToStatePeer[block.ID].Peer.Pub.ID().Bytes())
+	return
+}
+
 type BlockStatus byte
 
-func (b BlockStatus) Active() bool {
+func (b BlockStatus) IsActive() bool {
 	return b == BlockStatusHead || b == BlockStatusTail
 }
 
@@ -71,15 +95,15 @@ const (
 )
 
 type Block struct {
-	ID      ID256
-	PID     ID256
+	ID      ID64
+	ID256   ID256
 	BitSize []uint8
 	Status  BlockStatus
 }
 
 type TickStatus byte
 
-func (t TickStatus) Active() bool {
+func (t TickStatus) IsActive() bool {
 	return t == TickStatusHead || t == TickStatusTail
 }
 
@@ -91,36 +115,46 @@ const (
 )
 
 type Tick struct {
-	ID     ID256
-	Count  uint8
-	Bucket uint8
-	Status TickStatus
+	ID            ID64
+	ID256         ID256
+	Count         uint8
+	BitSize       uint8
+	BitSizePrefix uint8
+	Status        TickStatus
 }
 
 type Time []byte
 
-func (t Time) Validate() bool {
-	length := len(t) / BlockShortIDByteLen
-	tickNum := length - 1
-	mod := len(t) % BlockShortIDByteLen
-	return length >= 2 && mod == tickNum
+func (t Time) Bytes() []byte {
+	return t[:]
 }
 
-func (t Time) BlockShortID() (blockId ID64) {
-	copy(blockId[:], t[:BlockShortIDByteLen])
+func (t Time) Validate() bool {
+	length := len(t) / TickByteLen
+	mod := len(t) % TickByteLen
+	return length >= 1 && mod == 0
+}
+
+func (t Time) CommonPrefix(t1 Time) (tickIDs []ID64) {
+	for i, tickID := range t.ListTickID() {
+		if tickID != t1.TickID(i) {
+			return
+		}
+		tickIDs = append(tickIDs, tickID)
+	}
 	return
 }
 
-func (t Time) TickShortID(bucket int) (tickId ID64) {
-	start := BlockShortIDByteLen + bucket*TickByteLen - IndexShift
-	end := start + BlockShortIDByteLen + IndexShift
+func (t Time) TickID(bucket int) (tickId ID64) {
+	start := bucket * TickByteLen
+	end := start + TickByteLen + IndexShift
 	copy(tickId[:], t[start:end])
 	return
 }
 
-func (t Time) TickShortIDs() (tickIds []ID64) {
-	for i := 0; i < (len(t) / BlockShortIDByteLen); i++ {
-		tickIds = append(tickIds, t.TickShortID(i))
+func (t Time) ListTickID() (tickIds []ID64) {
+	for i := 0; i < (len(t) / TickByteLen); i++ {
+		tickIds = append(tickIds, t.TickID(i))
 	}
 	return
 }

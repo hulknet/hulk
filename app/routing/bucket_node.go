@@ -36,4 +36,4 @@ type peerByAddr []types.Peer
 
 func (a peerByAddr) Len() int           { return len(a) }
 func (a peerByAddr) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a peerByAddr) Less(i, j int) bool { return a[i].PK.ID256().Uint64() < a[j].PK.ID256().Uint64() }
+func (a peerByAddr) Less(i, j int) bool { return a[i].Pub.ID256().Uint64() < a[j].Pub.ID256().Uint64() }

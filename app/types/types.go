@@ -22,21 +22,20 @@ const (
 	ErrSizeSign520 = "size of Sign520 is invalid"
 
 	ErrGetToken = "failed to get Token from request header"
-	ErrGetID256 = "failed to get ID256 from request header"
 	ErrGetTime  = "failed to get Time from request header"
-	ErrGetID64  = "failed to get ID64 from request header"
+	ErrGetID    = "failed to get ID from request header"
 	ErrGetSign  = "failed to get Signature from request header"
 )
 
 type Token [32]byte
 type Permission []byte
 type Peer struct {
-	PK    PK
+	Pub   PubKey
 	Token Token
 }
 
 func (p Peer) Equal(other Peer) bool {
-	return p.PK == other.PK
+	return p.Pub == other.Pub
 }
 
 type ID256 [32]byte
@@ -50,6 +49,10 @@ func (i ID256) Uint64() uint64 {
 	return binary.BigEndian.Uint64(i[:8])
 }
 
+func (i ID256) Bytes() []byte {
+	return i[:]
+}
+
 func (i ID256) ID64() (prefix ID64) {
 	copy(prefix[:], i[:8])
 	return
@@ -57,35 +60,15 @@ func (i ID256) ID64() (prefix ID64) {
 
 type ID64 [8]byte
 
-func (ip ID64) Bytes() []byte {
-	return ip[:]
+func (i ID64) Bytes() []byte {
+	return i[:]
 }
 
-func (ip ID64) Uint64() uint64 {
-	return binary.BigEndian.Uint64(ip[:])
+func (i ID64) Uint64() uint64 {
+	return binary.BigEndian.Uint64(i[:])
 }
 
-type PK [32]byte
-
-func (p PK) ID256() (id ID256) {
-	copy(id[:], p[:])
-	return id
-}
-
-func (p PK) Bytes() []byte {
-	return p[:]
-}
-
-func (p PK) ID64() (id ID64) {
-	copy(id[:], p[:])
-	return
-}
-
-func (p PK) Write(data []byte) {
-	copy(p[:], data[:])
-}
-
-func ToHex(s [32]byte) string {
+func ID256ToHex(s [32]byte) string {
 	return hex.EncodeToString(s[:])
 }
 

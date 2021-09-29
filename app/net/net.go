@@ -1,78 +1,73 @@
 package net
 
 import (
-	"sync"
-
 	"github.com/kotfalya/hulk/app/routing"
 	"github.com/kotfalya/hulk/app/types"
 )
 
-type allowList map[types.Token]types.Peer
-
-type Net struct {
-	mu        sync.RWMutex
-	self      types.Peer
-	table     *routing.Table
-	handler   *MessageHandler
-	allowList map[types.Token]types.Peer
+type Container struct {
+	blockToNet map[types.ID64]*Net
 }
 
-func NewNet(self types.Peer) *Net {
-	return &Net{
-		mu:        sync.RWMutex{},
-		self:      self,
-		allowList: createAllowLost(self),
+func (c *Container) SetState(state types.State) {
+	net, ok := c.blockToNet[state.Block().ID]
+	if !ok {
+		net = NewNet(state)
+	} else {
+		net.UpdateState(state)
 	}
 }
 
-func (n *Net) Init(state types.State) {
-	n.table = routing.NewRoutingTable(n.self, state.Head().BitSize)
-	n.handler = NewMessageHandler(state)
+func (c *Container) Net(id types.ID64) (net *Net, ok bool) {
+	net, ok = c.blockToNet[id]
+	return
 }
 
-func (n *Net) Start() error {
-	return n.handler.Start()
+type Net struct {
+	state     types.State
+	table     *routing.Table
+	handler   MessageHandler
+	allowList AllowList
 }
 
-func (n *Net) AddPeer(peer types.Peer) {
-	n.table.SetPeer(peer)
+func NewNet(state types.State) *Net {
+	return &Net{
+		state:     state,
+		table:     routing.NewTable(state.Block()),
+		handler:   NewMessageHandler(state),
+		allowList: createAllowList(state.Peer()),
+	}
 }
 
-func (n *Net) FindPeer(target types.ID64) types.Peer {
-	return n.table.GetPeer(target)
+func (n *Net) UpdateState(state types.State) {
+	n.handler.UpdateState(state)
+	n.state = state
 }
 
-func (n *Net) CheckToken(token types.Token) bool {
-	_, ok := n.allowList[token]
-	return ok
+func (n *Net) State() types.State {
+	return n.state
 }
 
-func (n *Net) IsSelf(token types.Token) bool {
-	peer, ok := n.allowList[token]
-	return ok && n.self.Equal(peer)
+func (n *Net) IsActive() bool {
+	return n.state.Block().Status.IsActive()
 }
 
-func (n *Net) Self() types.Peer {
-	return n.self
+func (n *Net) Table() *routing.Table {
+	return n.table
+}
+
+func (n *Net) AllowList() AllowList {
+	return n.allowList
 }
 
 func (n *Net) HandleMessage(header types.MessageHeader, data []byte) error {
-	if n.IsSelf(header.Token) {
-		n.handler.Message(header.ID, header.Part, data)
-	} else {
-		//todo: implement proxy client
+	tickIds := header.Time.ListTickID()
+	for i := len(tickIds) - 1; i > 0; i-- {
+		//tick, ok := n.state.FindTick(tickIds[i])
 	}
-	//if !rh.net.CheckPeer(peerIn) {
-	//	w.WriteHeader(http.StatusForbidden)
-	//	return
-	//}
-	//
-	//peer := rh.net.FindPeer(messageHeader.To)
 	return nil
 }
 
-func createAllowLost(self types.Peer) allowList {
-	peers := make(map[types.Token]types.Peer)
-	peers[self.Token] = self
-	return peers
+func (n *Net) ProxyMessage(header types.MessageHeader, data []byte) error {
+	return nil
 }

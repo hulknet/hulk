@@ -5,17 +5,17 @@ import (
 )
 
 type Table struct {
-	self    types.Peer
+	id      types.ID64
 	buckets []Bucket
 }
 
-func NewRoutingTable(self types.Peer, bitSize []uint8) *Table {
-	t := &Table{
-		self:    self,
-		buckets: createBuckets(bitSize),
+func NewTable(block types.Block) *Table {
+	c := &Table{
+		id:      block.ID,
+		buckets: createBuckets(block.BitSize),
 	}
-	t.SetPeer(self)
-	return t
+
+	return c
 }
 
 func (rt *Table) GetPeer(target types.ID64) types.Peer {
@@ -23,11 +23,11 @@ func (rt *Table) GetPeer(target types.ID64) types.Peer {
 }
 
 func (rt *Table) SetPeer(peer types.Peer) {
-	rt.bucket(peer.PK.ID64()).SetPeer(peer)
+	rt.bucket(peer.Pub.ID()).SetPeer(peer)
 }
 
 func (rt *Table) bucket(target types.ID64) Bucket {
-	cpl := types.Cpl(rt.self.PK.ID64().Bytes(), target.Bytes())
+	cpl := types.Cpl(rt.id.Bytes(), target.Bytes())
 	for _, b := range rt.buckets {
 		if cpl <= int(b.BitSizePrefix()+b.BitSize()) {
 			return b
@@ -36,11 +36,11 @@ func (rt *Table) bucket(target types.ID64) Bucket {
 	return rt.buckets[len(rt.buckets)-1]
 }
 
-func createBuckets(bitSize []uint8) []Bucket {
-	buckets := make([]Bucket, len(bitSize))
+func createBuckets(bitSizeList []uint8) []Bucket {
+	buckets := make([]Bucket, len(bitSizeList))
 	bitSizePrefix := uint8(0)
-	for i, s := range bitSize {
-		if i == len(bitSize)-1 {
+	for i, s := range bitSizeList {
+		if i == len(bitSizeList)-1 {
 			buckets[i] = NewFloatBucket(bitSizePrefix, s)
 		} else {
 			buckets[i] = NewFixedBucket(bitSizePrefix, s)

@@ -20,7 +20,7 @@ func (s Sign520) Sign512() (sign [64]byte) {
 	return
 }
 
-func (s Sign520) PK(hash []byte) (pk PK, err error) {
+func (s Sign520) Pub(hash []byte) (pk PubKey, err error) {
 	pkSource, err := secp256k1.RecoverPubkey(hash, s[:])
 	if err != nil {
 		return
@@ -36,7 +36,7 @@ func (s Sign520) CheckSignature(msg []byte) (bool, error) {
 }
 
 func (s Sign520) CheckHashSignature(hash []byte) (bool, error) {
-	pk, err := s.PK(hash)
+	pk, err := s.Pub(hash)
 	if err != nil {
 		return false, err
 	}
