@@ -1,5 +1,7 @@
 package types
 
+import "encoding/hex"
+
 const (
 	TickByteLen = 9
 	IndexShift  = 1
@@ -21,6 +23,7 @@ type State struct {
 func CreateState(time Time, block Block, ticks []Tick, peer Peer, key *ECKey, token Token) State {
 	state := State{
 		time:  time,
+		ticks: make(map[ID64]Tick, len(ticks)),
 		block: block,
 		peer:  peer,
 		key:   key,
@@ -36,6 +39,14 @@ func CreateState(time Time, block Block, ticks []Tick, peer Peer, key *ECKey, to
 
 func (s State) Time() Time {
 	return s.time
+}
+
+func (s State) Token() Token {
+	return s.token
+}
+
+func (s State) Key() *ECKey {
+	return s.key
 }
 
 func (s State) Peer() Peer {
@@ -55,12 +66,17 @@ func (s State) FindTick(id ID64) (tick Tick, ok bool) {
 	return
 }
 
-func (s State) ValidateTime(from ID64, time Time) bool {
-	//block, ok := s.blocks[time.BlockID64()]
-	//if !ok || !block.Status.IsActive() {
-	//	return false
-	//}
+func (s State) Ticks(onlyActive bool) (ticks []Tick) {
+	for _, tick := range s.ticks {
+		if onlyActive && !tick.Status.IsActive() {
+			continue
+		}
+		ticks = append(ticks, tick)
+	}
+	return
+}
 
+func (s State) ValidateTime(from ID64, time Time) bool {
 	cpl := Cpl(from.Bytes(), s.peer.Pub.ID().Bytes())
 	for i, size := range s.block.BitSize {
 		tick, ok := s.ticks[time.TickID(i)]
@@ -85,6 +101,21 @@ type BlockStatus byte
 
 func (b BlockStatus) IsActive() bool {
 	return b == BlockStatusHead || b == BlockStatusTail
+}
+
+func (b BlockStatus) String() string {
+	switch b {
+	case BlockStatusNew:
+		return "new"
+	case BlockStatusHead:
+		return "head"
+	case BlockStatusTail:
+		return "tail"
+	case BlockStatusOld:
+		return "old"
+	default:
+		return "unknown"
+	}
 }
 
 const (
@@ -117,6 +148,7 @@ const (
 type Tick struct {
 	ID            ID64
 	ID256         ID256
+	IsNode        bool
 	Count         uint8
 	BitSize       uint8
 	BitSizePrefix uint8
@@ -129,6 +161,10 @@ func (t Time) Bytes() []byte {
 	return t[:]
 }
 
+func (t Time) Hex() string {
+	return hex.EncodeToString(t[:])
+}
+
 func (t Time) Validate() bool {
 	length := len(t) / TickByteLen
 	mod := len(t) % TickByteLen
@@ -136,7 +172,7 @@ func (t Time) Validate() bool {
 }
 
 func (t Time) CommonPrefix(t1 Time) (tickIDs []ID64) {
-	for i, tickID := range t.ListTickID() {
+	for i, tickID := range t.TickIDs(false) {
 		if tickID != t1.TickID(i) {
 			return
 		}
@@ -152,9 +188,15 @@ func (t Time) TickID(bucket int) (tickId ID64) {
 	return
 }
 
-func (t Time) ListTickID() (tickIds []ID64) {
-	for i := 0; i < (len(t) / TickByteLen); i++ {
-		tickIds = append(tickIds, t.TickID(i))
+func (t Time) TickIDs(reverse bool) (tickIds []ID64) {
+	if reverse {
+		for i := (len(t) / TickByteLen) - 1; i >= 0; i-- {
+			tickIds = append(tickIds, t.TickID(i))
+		}
+	} else {
+		for i := 0; i < (len(t) / TickByteLen); i++ {
+			tickIds = append(tickIds, t.TickID(i))
+		}
 	}
 	return
 }

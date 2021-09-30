@@ -26,16 +26,23 @@ func NewNodeHandler() *NodeHandler {
 	}
 }
 
-func (h *NodeHandler) Start() error {
+func (h *NodeHandler) Start() {
 	for {
 		select {
-		case mi := <-h.messageCh:
-			if _, ok := h.resolved[mi.id]; ok {
+		case mi, ok := <-h.messageCh:
+			if !ok {
+				return
+			}
+			if _, resolved := h.resolved[mi.id]; resolved {
 				continue
 			}
 			go h.processor(mi)
 		}
 	}
+}
+
+func (h *NodeHandler) Stop() {
+	close(h.messageCh)
 }
 
 func (h *NodeHandler) Message(header types.MessageHeader, data []byte) {

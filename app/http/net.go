@@ -54,7 +54,7 @@ func parseToken(tokenStr string) (token types.Token, err error) {
 		return
 	}
 
-	token, err = types.ID256FromHex(tokenStr)
+	token, err = types.TokenFromHex(tokenStr)
 	if err != nil {
 		err = errors.New(types.ErrDecodeToken)
 		return

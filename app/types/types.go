@@ -28,6 +28,11 @@ const (
 )
 
 type Token [32]byte
+
+func (t Token) Hex() string {
+	return hex.EncodeToString(t[:])
+}
+
 type Permission []byte
 type Peer struct {
 	Pub   PubKey
@@ -53,8 +58,12 @@ func (i ID256) Bytes() []byte {
 	return i[:]
 }
 
-func (i ID256) ID64() (prefix ID64) {
-	copy(prefix[:], i[:8])
+func (i ID256) Hex() string {
+	return hex.EncodeToString(i[:])
+}
+
+func (i ID256) ID64() (id ID64) {
+	copy(id[:], i[:8])
 	return
 }
 
@@ -62,6 +71,10 @@ type ID64 [8]byte
 
 func (i ID64) Bytes() []byte {
 	return i[:]
+}
+
+func (i ID64) Hex() string {
+	return hex.EncodeToString(i[:])
 }
 
 func (i ID64) Uint64() uint64 {
@@ -85,19 +98,32 @@ func FromHex(s string, byteLen int) ([]byte, error) {
 	return data, nil
 }
 
-func ID256FromHex(s string) ([32]byte, error) {
+func ID256FromHex(s string) (id ID256, err error) {
 	data, err := hex.DecodeString(s)
 	if err != nil {
-		return [32]byte{}, errors.New(ErrDecodeByte32)
+		err = errors.New(ErrDecodeByte32)
 	}
 
-	var id [32]byte
 	bitLen := copy(id[:], data[:32])
 	if bitLen != 32 {
-		return [32]byte{}, errors.New(ErrSizeByte32)
+		err = errors.New(ErrSizeByte32)
 	}
 
-	return id, nil
+	return
+}
+
+func TokenFromHex(s string) (token Token, err error) {
+	data, err := hex.DecodeString(s)
+	if err != nil {
+		err = errors.New(ErrDecodeByte32)
+	}
+
+	bitLen := copy(token[:], data[:32])
+	if bitLen != 32 {
+		err = errors.New(ErrSizeByte32)
+	}
+
+	return
 }
 
 func ID64FromHex(s string) (id ID64, err error) {

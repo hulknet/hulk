@@ -16,34 +16,33 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	//pk, err := types.ID256FromHex("f38157e98d676c4299899118a4a6ecae16f6f1c19013007b35dc7c23f2d52e7a")
-	//if err != nil {
-	//	panic(err)
-	//}
-	token, err := types.ID256FromHex("051eaf028faeed1e4a1c7acc68c4e1ad2ec49b283632a65dd632010833f6164e")
+	token, err := types.TokenFromHex("051eaf028faeed1e4a1c7acc68c4e1ad2ec49b283632a65dd632010833f6164e")
+	if err != nil {
+		panic(err)
+	}
+	blockId, err := types.ID256FromHex("f38157e98d676c4299899118a4a6ecae16f6f1c19013007b35dc7c23f2d52e7a")
+	if err != nil {
+		panic(err)
+	}
+	tickId, err := types.ID256FromHex("ecae16f6f1c19013007b35dc7c23f2d52e7af38157e98d676c4299899118a4a6")
 	if err != nil {
 		panic(err)
 	}
 
-	pk := ecpk.Pub()
-
-	id := pk.ID256()
-
-	b := types.Block{
-		ID:      id.ID64(),
-		ID256:   id,
+	block := types.Block{
+		ID:      blockId.ID64(),
+		ID256:   blockId,
 		BitSize: []byte{1},
 		Status:  types.BlockStatusHead,
 	}
 	t := types.Tick{
-		ID:     id.ID64(),
-		ID256:  id,
+		ID:     tickId.ID64(),
+		ID256:  tickId,
 		Count:  0,
 		Status: types.TickStatusHead,
 	}
-
 	p := types.Peer{
-		Pub:   pk,
+		Pub:   ecpk.Pub(),
 		Token: token,
 	}
 
@@ -52,14 +51,14 @@ func main() {
 	time = append(time, byte(1))
 
 	var blocks []types.Block
-	blocks = append(blocks, b)
+	blocks = append(blocks, block)
 
 	var ticks []types.Tick
 	ticks = append(ticks, t)
 
-	s := types.CreateState(time, b, ticks, p, ecpk, token)
+	s := types.CreateState(time, block, ticks, p, ecpk, token)
 
-	netCont := &net.Container{}
+	netCont := net.NewNetContainer()
 	netCont.SetState(s)
 
 	//pk for internal communication

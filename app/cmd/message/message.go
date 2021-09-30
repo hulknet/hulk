@@ -107,8 +107,9 @@ func main() {
 			res[i] = hex.EncodeToString(v)
 		}
 		return ctx.JSON(http.StatusOK, echo.Map{
-			"status": "OK",
-			"chunks": res,
+			"status":    "OK",
+			"chunks":    res,
+			"messageId": types.GenerateSHA().ID64().Hex(),
 		})
 	})
 
@@ -137,6 +138,7 @@ func main() {
 		req.Header.Add("Block", m.BlockID)
 		req.Header.Add("Token", m.Token)
 		req.Header.Add("To", m.To)
+		req.Header.Add("Time", m.Time)
 		req.Header.Add("From", m.From)
 		req.Header.Add("Partition", m.Part)
 		req.Header.Add("Signature", hex.EncodeToString(sign))
@@ -161,7 +163,7 @@ func main() {
 		return ctx.JSON(http.StatusOK, echo.Map{
 			"status":        resp.Status,
 			"resp":          string(respBody),
-			"bodySignature": sign,
+			"bodySignature": hex.EncodeToString(sign),
 		})
 	})
 
@@ -193,6 +195,7 @@ func signMessage(bodyStr, idStr, blockIdStr, toStr, fromStr, timeStr, partStr st
 	if err != nil {
 		return nil, err
 	}
+
 	body, err := types.FromHex(bodyStr, 0)
 	if err != nil {
 		return nil, err
@@ -218,6 +221,9 @@ func parseID(idStr string) (id types.ID64, err error) {
 }
 
 func parsePart(partStr string) (part types.Partition, err error) {
+	if partStr == "" {
+		return
+	}
 	partBytes, err := types.FromHex(partStr, 2)
 	if err != nil {
 		err = errors.New(types.ErrDecodePart)

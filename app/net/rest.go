@@ -39,13 +39,33 @@ func NewRestServer(netCont *Container, addr string, secret interface{}) *Rest {
 		})
 	})
 
-	r.echo.GET("/self", func(ctx echo.Context) error {
+	r.echo.GET("/block/:blockId", func(ctx echo.Context) error {
+		blockId, err := types.ID64FromHex(ctx.Param("blockId"))
+		if err != nil {
+			return ctx.JSON(http.StatusBadRequest, echo.Map{"error": err.Error()})
+		}
+
+		net, ok := r.netCont.blockToNet[blockId]
+		if !ok {
+			return ctx.JSON(http.StatusBadRequest, echo.Map{"error": "unknown block id"})
+		}
+
 		return ctx.JSON(http.StatusOK, echo.Map{
-			//"pk":       types.ID256ToHex(r.net.self.Pub.ID256()),
-			//"pkPrefix": hex.EncodeToString(r.net.self.Pub.ID().Bytes()),
-			//"addr":     hex.EncodeToString(r.net.self.Pub.ID256().ID().Bytes()),
-			//"token":    types.ID256ToHex(r.net.self.Token),
+			"pub":     net.State().Peer().Pub.ID256().Hex(),
+			"id":      net.State().Peer().Pub.ID().Hex(),
+			"blockId": net.State().ID().Hex(),
+			"token":   net.State().Peer().Token.Hex(),
+			"time":    net.State().Time().Hex(),
 		})
+	})
+
+	r.echo.GET("/block", func(ctx echo.Context) error {
+		resp := echo.Map{}
+		for id, net := range r.netCont.blockToNet {
+			resp[id.Hex()] = net.state.Block().Status.String()
+		}
+
+		return ctx.JSON(http.StatusOK, resp)
 	})
 
 	return r

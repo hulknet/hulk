@@ -105,32 +105,29 @@ type Processor func(m Message)
 
 type BucketHandler struct {
 	messageCh chan MessageItem
-	state     types.State
 	chunks    *MessageChunks
 	processor func(m Message)
 }
 
-func NewMessageHandler(state types.State) *BucketHandler {
+func NewBucketHandler() *BucketHandler {
 	return &BucketHandler{
-		state:     state,
 		chunks:    newMessageChunks(),
 		processor: createProcessor(),
 		messageCh: make(chan MessageItem, 10),
 	}
 }
 
-func (h *BucketHandler) UpdateState(state types.State) {
-
-}
-
 func (h *BucketHandler) Message(header types.MessageHeader, data []byte) {
 	h.messageCh <- MessageItem{header.ID, header.Time, header.Part, data}
 }
 
-func (h *BucketHandler) Start() error {
+func (h *BucketHandler) Start() {
 	for {
 		select {
-		case mi := <-h.messageCh:
+		case mi, ok := <-h.messageCh:
+			if !ok {
+				return
+			}
 			if h.chunks.IsMessageResolved(mi.id) {
 				continue
 			}
@@ -142,6 +139,10 @@ func (h *BucketHandler) Start() error {
 			}
 		}
 	}
+}
+
+func (h *BucketHandler) Stop() {
+	close(h.messageCh)
 }
 
 func createProcessor() Processor {
