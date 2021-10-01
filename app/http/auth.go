@@ -3,7 +3,7 @@ package http
 import (
 	"time"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
@@ -13,7 +13,7 @@ import (
 type JWTClaims struct {
 	ID   string    `json:"id"`
 	Type TokenType `json:"type"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 func (jc *JWTClaims) ToService() (*Service, error) {
@@ -36,7 +36,8 @@ const (
 	AuthTypeType
 	NetTokenType
 	CpuTokenType
-	StoreTokenType
+	DiskTokenType
+	MemoryTokenType
 	UnknownTokenType
 )
 
@@ -46,8 +47,10 @@ func TokenTypeFromString(token string) TokenType {
 		return AdminTokenType
 	case "net":
 		return NetTokenType
-	case "store":
-		return StoreTokenType
+	case "disk":
+		return DiskTokenType
+	case "memory":
+		return MemoryTokenType
 	case "cpu":
 		return CpuTokenType
 	case "auth":
@@ -63,8 +66,10 @@ func TokenToString(token TokenType) string {
 		return "admin"
 	case NetTokenType:
 		return "net"
-	case StoreTokenType:
-		return "store"
+	case DiskTokenType:
+		return "disk"
+	case MemoryTokenType:
+		return "memory"
 	case CpuTokenType:
 		return "cpu"
 	case AuthTypeType:
@@ -78,8 +83,8 @@ func GenerateToken(key interface{}, tokenType TokenType) (string, error) {
 	claims := &JWTClaims{
 		types.ID256ToHex(types.GenerateSHA()),
 		tokenType,
-		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
+		jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
 		},
 	}
 
