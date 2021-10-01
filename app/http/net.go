@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/kotfalya/hulk/app/types"
+	"github.com/hulknet/hulk/app/types"
 )
 
 const (
@@ -120,7 +120,7 @@ func parsePart(partStr string) (part types.Partition, err error) {
 	}
 
 	part.Position = partBytes[0]
-	part.Position = partBytes[1]
+	part.Length = partBytes[1]
 
 	return
 }

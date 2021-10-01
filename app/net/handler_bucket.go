@@ -2,10 +2,11 @@ package net
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 
-	"github.com/kotfalya/hulk/app/types"
+	"github.com/vmihailenco/msgpack/v5"
+
+	"github.com/hulknet/hulk/app/types"
 )
 
 type MessageItem struct {
@@ -27,12 +28,6 @@ func (m *Message) Update(position byte, data []byte) bool {
 		return false
 	}
 
-	// waits for msgpack
-	data, err := hex.DecodeString(string(data))
-	if err != nil {
-		fmt.Println(err)
-	}
-
 	m.messages[position] = data
 	m.received++
 
@@ -46,23 +41,9 @@ func (m Message) Assembled() bool {
 func newMessage(mi MessageItem) (m Message) {
 	m.id = mi.id
 	m.received = 1
-
-	if mi.part.Length > 1 {
-		m.length = mi.part.Length
-		m.messages = make([][]byte, mi.part.Length)
-
-		// waits for msgpack
-		data, err := hex.DecodeString(string(mi.data))
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		m.messages[mi.part.Position] = data
-	} else {
-		m.length = 1
-		m.messages = [][]byte{mi.data}
-	}
-
+	m.length = mi.part.Length
+	m.messages = make([][]byte, mi.part.Length)
+	m.messages[mi.part.Position] = mi.data
 	return
 }
 
@@ -147,27 +128,24 @@ func (h *BucketHandler) Stop() {
 
 func createProcessor() Processor {
 	return func(m Message) {
-		if m.length > 1 {
-			d, err := types.DecryptFromParts(m.messages)
-			if err != nil {
-				fmt.Printf("error decodingfailed to decode message: %v \n", err)
-			}
-
-			var baseMessage types.BaseMessage
-			if err = json.Unmarshal(d, &baseMessage); err != nil {
-				fmt.Printf("failed to unmarshal BaseMessage: %v \n", err)
-			}
-
-			ok, err := types.CheckStringSignature(*baseMessage.Data, baseMessage.Sign)
-			if err != nil {
-				fmt.Printf("failed to check signature: %v \n", err)
-			} else if !ok {
-				fmt.Printf("signature is invalid: %v \n", baseMessage)
-			}
-
-			fmt.Println(baseMessage.Type)
-		} else {
-			fmt.Println(string(m.messages[0]))
+		d, err := types.DecryptFromParts(m.messages)
+		if err != nil {
+			fmt.Printf("error decodingfailed to decode message: %v \n", err)
 		}
+
+		var baseMessage types.BaseMessage
+		if err = msgpack.Unmarshal(d, &baseMessage); err != nil {
+			fmt.Printf("failed to unmarshal BaseMessage: %v \n", err)
+		}
+
+		ok, err := types.CheckSignature(baseMessage.Data, baseMessage.Sign)
+		if err != nil {
+			fmt.Printf("failed to check signature: %v \n", err)
+		} else if !ok {
+			fmt.Printf("signature is invalid: %v \n", baseMessage)
+		}
+
+		fmt.Println(baseMessage.Type)
+		fmt.Println(hex.EncodeToString(baseMessage.Data))
 	}
 }

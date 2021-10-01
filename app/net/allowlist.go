@@ -1,6 +1,6 @@
 package net
 
-import "github.com/kotfalya/hulk/app/types"
+import "github.com/hulknet/hulk/app/types"
 
 type AllowList map[types.Token]types.Peer
 

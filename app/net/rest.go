@@ -5,8 +5,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	libHttp "github.com/kotfalya/hulk/app/http"
-	"github.com/kotfalya/hulk/app/types"
+	libHttp "github.com/hulknet/hulk/app/http"
+	"github.com/hulknet/hulk/app/types"
 )
 
 type Rest struct {

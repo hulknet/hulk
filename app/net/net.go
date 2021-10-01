@@ -1,8 +1,8 @@
 package net
 
 import (
-	"github.com/kotfalya/hulk/app/routing"
-	"github.com/kotfalya/hulk/app/types"
+	"github.com/hulknet/hulk/app/routing"
+	"github.com/hulknet/hulk/app/types"
 )
 
 type Container struct {

@@ -7,7 +7,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
-	"github.com/kotfalya/hulk/app/types"
+	"github.com/hulknet/hulk/app/types"
 )
 
 type JWTClaims struct {

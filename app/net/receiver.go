@@ -7,7 +7,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	libHttp "github.com/kotfalya/hulk/app/http"
+	libHttp "github.com/hulknet/hulk/app/http"
 )
 
 type ReceiverHandler struct {

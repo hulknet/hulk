@@ -4,7 +4,7 @@ import (
 	"math"
 	"sort"
 
-	"github.com/kotfalya/hulk/app/types"
+	"github.com/hulknet/hulk/app/types"
 )
 
 type NodeBucket struct {

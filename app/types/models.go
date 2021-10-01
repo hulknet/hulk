@@ -1,6 +1,8 @@
 package types
 
-import "encoding/json"
+import (
+	"github.com/vmihailenco/msgpack/v5"
+)
 
 type MessageHeader struct {
 	ID      ID64
@@ -14,9 +16,9 @@ type MessageHeader struct {
 }
 
 type BaseMessage struct {
-	Type string           `json:"type"`
-	Data *json.RawMessage `json:"data"`
-	Sign string           `json:"sign"`
+	Type string
+	Data msgpack.RawMessage
+	Sign []byte
 }
 
 type Partition struct {

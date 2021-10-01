@@ -1,10 +1,11 @@
 package net
 
 import (
-	"encoding/json"
 	"fmt"
 
-	"github.com/kotfalya/hulk/app/types"
+	"github.com/vmihailenco/msgpack/v5"
+
+	"github.com/hulknet/hulk/app/types"
 )
 
 type NodeMessage struct {
@@ -54,11 +55,11 @@ type NodeProcessor func(m NodeMessage)
 func createNodeProcessor() NodeProcessor {
 	return func(m NodeMessage) {
 		var baseMessage types.BaseMessage
-		if err := json.Unmarshal(m.data, &baseMessage); err != nil {
+		if err := msgpack.Unmarshal(m.data, &baseMessage); err != nil {
 			fmt.Printf("failed to unmarshal BaseMessage: %v \n", err)
 		}
 
-		ok, err := types.CheckStringSignature(*baseMessage.Data, baseMessage.Sign)
+		ok, err := types.CheckSignature(baseMessage.Data, baseMessage.Sign)
 		if err != nil {
 			fmt.Printf("failed to check signature: %v \n", err)
 		} else if !ok {

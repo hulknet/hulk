@@ -9,8 +9,8 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	log "github.com/sirupsen/logrus"
 
-	libHttp "github.com/kotfalya/hulk/app/http"
-	"github.com/kotfalya/hulk/app/types"
+	libHttp "github.com/hulknet/hulk/app/http"
+	"github.com/hulknet/hulk/app/types"
 )
 
 const DefaultPassword = "password"

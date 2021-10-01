@@ -1,6 +1,6 @@
 package net
 
-import "github.com/kotfalya/hulk/app/types"
+import "github.com/hulknet/hulk/app/types"
 
 type MessageHandler interface {
 	Message(header types.MessageHeader, data []byte)

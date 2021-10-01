@@ -3,7 +3,7 @@ package routing
 import (
 	"math"
 
-	"github.com/kotfalya/hulk/app/types"
+	"github.com/hulknet/hulk/app/types"
 )
 
 type NetBucket struct {

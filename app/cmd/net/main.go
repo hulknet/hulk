@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/kotfalya/hulk/app/net"
-	"github.com/kotfalya/hulk/app/types"
+	"github.com/hulknet/hulk/app/net"
+	"github.com/hulknet/hulk/app/types"
 )
 
 func main() {
@@ -36,6 +36,7 @@ func main() {
 		Status:  types.BlockStatusHead,
 	}
 	t := types.Tick{
+		IsNode: false,
 		ID:     tickId.ID64(),
 		ID256:  tickId,
 		Count:  0,
