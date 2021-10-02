@@ -36,7 +36,7 @@ func main() {
 		Status:  types.BlockStatusHead,
 	}
 	t := types.Tick{
-		IsNode: false,
+		IsNode: true,
 		ID:     tickId.ID64(),
 		ID256:  tickId,
 		Count:  0,
@@ -62,7 +62,7 @@ func main() {
 	netCont := net.NewNetContainer()
 	netCont.SetState(s)
 
-	//pk for internal communication
+	//pk for jwt internal communication
 	pKey, err := types.DecodeDefaultPublicKey()
 	if err != nil {
 		panic(err)

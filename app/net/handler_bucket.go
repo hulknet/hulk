@@ -11,7 +11,6 @@ import (
 
 type MessageItem struct {
 	id   types.ID64
-	time types.Time
 	part types.Partition
 	data []byte
 }
@@ -20,15 +19,15 @@ type Message struct {
 	id       types.ID64
 	length   byte
 	received byte
-	messages [][]byte
+	items    [][]byte
 }
 
 func (m *Message) Update(position byte, data []byte) bool {
-	if len(m.messages[position]) > 0 {
+	if len(m.items[position]) > 0 {
 		return false
 	}
 
-	m.messages[position] = data
+	m.items[position] = data
 	m.received++
 
 	return true
@@ -42,15 +41,14 @@ func newMessage(mi MessageItem) (m Message) {
 	m.id = mi.id
 	m.received = 1
 	m.length = mi.part.Length
-	m.messages = make([][]byte, mi.part.Length)
-	m.messages[mi.part.Position] = mi.data
+	m.items = make([][]byte, mi.part.Length)
+	m.items[mi.part.Position] = mi.data
 	return
 }
 
 type MessageChunks struct {
-	messages      map[types.ID64]Message
-	messageToTime map[types.ID64]types.Time
-	resolved      map[types.ID64]struct{}
+	messages map[types.ID64]Message
+	resolved map[types.ID64]struct{}
 }
 
 func newMessageChunks() *MessageChunks {
@@ -99,7 +97,7 @@ func NewBucketHandler() *BucketHandler {
 }
 
 func (h *BucketHandler) Message(header types.MessageHeader, data []byte) {
-	h.messageCh <- MessageItem{header.ID, header.Time, header.Part, data}
+	h.messageCh <- MessageItem{header.ID, header.Part, data}
 }
 
 func (h *BucketHandler) Start() {
@@ -128,7 +126,7 @@ func (h *BucketHandler) Stop() {
 
 func createProcessor() Processor {
 	return func(m Message) {
-		d, err := types.DecryptFromParts(m.messages)
+		d, err := types.DecryptFromParts(m.items)
 		if err != nil {
 			fmt.Printf("error decodingfailed to decode message: %v \n", err)
 		}
