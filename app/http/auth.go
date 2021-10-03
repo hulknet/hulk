@@ -3,7 +3,7 @@ package http
 import (
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
@@ -13,7 +13,7 @@ import (
 type JWTClaims struct {
 	ID   string    `json:"id"`
 	Type TokenType `json:"type"`
-	jwt.RegisteredClaims
+	jwt.StandardClaims
 }
 
 func (jc *JWTClaims) ToService() (*Service, error) {
@@ -83,8 +83,8 @@ func GenerateToken(key interface{}, tokenType TokenType) (string, error) {
 	claims := &JWTClaims{
 		types.ID256ToHex(types.GenerateSHA()),
 		tokenType,
-		jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
+		jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
 		},
 	}
 

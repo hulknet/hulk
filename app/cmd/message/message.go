@@ -66,7 +66,7 @@ func main() {
 
 	e.POST("/sign", func(ctx echo.Context) error {
 		m := new(SignModel)
-		if err := ctx.Bind(m); err != nil {
+		if err := msgpack.NewDecoder(ctx.Request().Body).Decode(m); err != nil {
 			log.Error(err)
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}

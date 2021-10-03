@@ -2,11 +2,6 @@ package types
 
 import "encoding/hex"
 
-const (
-	TickByteLen = 9
-	IndexShift  = 1
-)
-
 type UpdateState interface {
 	UpdateState(state State)
 }
@@ -91,12 +86,6 @@ func (s State) ValidateTime(from ID64, time Time) bool {
 	return true
 }
 
-func (s State) LastCommonTick(from ID64, time Time) (tick Tick, ok bool) {
-
-	//cpl := Cpl(from.Bytes(), s.blockIdToStatePeer[block.ID].Peer.Pub.ID().Bytes())
-	return
-}
-
 type BlockStatus byte
 
 func (b BlockStatus) IsActive() bool {
@@ -132,6 +121,13 @@ type Block struct {
 	Status  BlockStatus
 }
 
+const (
+	TickStatusNew TickStatus = iota
+	TickStatusHead
+	TickStatusTail
+	TickStatusOld
+)
+
 type TickStatus byte
 
 func (t TickStatus) IsActive() bool {
@@ -139,10 +135,8 @@ func (t TickStatus) IsActive() bool {
 }
 
 const (
-	TickStatusNew TickStatus = iota
-	TickStatusHead
-	TickStatusTail
-	TickStatusOld
+	TickByteLen = 9
+	IndexShift  = 1
 )
 
 type Tick struct {

@@ -23,9 +23,8 @@ func NewRestServer(netCont *Container, addr string, secret interface{}) *Rest {
 		addr:    addr,
 		secret:  secret,
 	}
-
 	r.echo.Use(libHttp.RegisterJWT(secret))
-
+	r.echo.GET("/metrics", libHttp.PrometheusHandler())
 	r.echo.GET("/status", func(ctx echo.Context) error {
 		return ctx.JSON(http.StatusOK, echo.Map{
 			"status": "OK",
