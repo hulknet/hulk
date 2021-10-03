@@ -41,9 +41,6 @@ func ParseHTTPHeader(header http.Header) (messageHeader types.MessageHeader, err
 	if messageHeader.ID, err = parseID(header.Get(idHeader)); err != nil {
 		return
 	}
-	if messageHeader.Part, err = parsePart(header.Get(partHeader)); err != nil {
-		return
-	}
 
 	return
 }

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/ecdsa"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -25,7 +24,6 @@ type MessageHeaderModel struct {
 	From  string
 	Time  string
 	Token string
-	Part  string
 	Body  string
 }
 
@@ -169,7 +167,6 @@ func main() {
 		req.Header.Add("To", m.To)
 		req.Header.Add("Time", m.Time)
 		req.Header.Add("From", m.From)
-		req.Header.Add("Partition", m.Part)
 		req.Header.Add("Signature", hex.EncodeToString(sign))
 		resp, err := client.Do(req)
 		if err != nil {
@@ -213,10 +210,6 @@ func signMessage(m *MessageHeaderModel, pKey *ecdsa.PrivateKey) ([]byte, error) 
 	if err != nil {
 		return nil, err
 	}
-	part, err := parsePart(m.Part)
-	if err != nil {
-		return nil, err
-	}
 	time, err := types.FromHex(m.Time, 0)
 	if err != nil {
 		return nil, err
@@ -232,8 +225,6 @@ func signMessage(m *MessageHeaderModel, pKey *ecdsa.PrivateKey) ([]byte, error) 
 	data.Write(to[:])
 	data.Write(from[:])
 	data.Write(time[:])
-	data.WriteByte(part.Position)
-	data.WriteByte(part.Length)
 	data.Write(body)
 
 	msgHash := sha3.Sum256(data.Bytes())
@@ -242,22 +233,6 @@ func signMessage(m *MessageHeaderModel, pKey *ecdsa.PrivateKey) ([]byte, error) 
 
 func parseID(idStr string) (id types.ID64, err error) {
 	id, err = types.ID64FromHex(idStr)
-
-	return
-}
-
-func parsePart(partStr string) (part types.Partition, err error) {
-	if partStr == "" {
-		return
-	}
-	partBytes, err := types.FromHex(partStr, 2)
-	if err != nil {
-		err = errors.New(types.ErrDecodePart)
-		return
-	}
-
-	part.Position = partBytes[0]
-	part.Position = partBytes[1]
 
 	return
 }

@@ -9,71 +9,70 @@ import (
 	"github.com/hulknet/hulk/app/types"
 )
 
-type MessageItem struct {
+type MessageChunk struct {
 	id   types.ID64
-	part types.Partition
 	data []byte
 }
 
 type Message struct {
-	id       types.ID64
-	length   byte
-	received byte
-	items    [][]byte
+	id     types.ID64
+	chunks [][]byte
 }
 
-func (m *Message) Update(position byte, data []byte) bool {
-	if len(m.items[position]) > 0 {
+func (m *Message) Update(data []byte) bool {
+	if len(m.chunks[data[0]]) > 0 {
 		return false
 	}
-
-	m.items[position] = data
-	m.received++
-
+	m.chunks[data[0]] = data
 	return true
 }
 
 func (m Message) Assembled() bool {
-	return m.length == m.received
+	for _, chunk := range m.chunks {
+		if chunk == nil {
+			return false
+		}
+	}
+	return true
 }
 
-func newMessage(mi MessageItem) (m Message) {
+func newMessage(mi MessageChunk, chunksSize byte) (m Message) {
 	m.id = mi.id
-	m.received = 1
-	m.length = mi.part.Length
-	m.items = make([][]byte, mi.part.Length)
-	m.items[mi.part.Position] = mi.data
+	m.chunks = make([][]byte, chunksSize)
+	m.chunks[mi.data[0]] = mi.data
 	return
 }
 
-type MessageChunks struct {
-	messages map[types.ID64]Message
-	resolved map[types.ID64]struct{}
+type ChunkResolver struct {
+	chunkSize byte
+	messages  map[types.ID64]Message
+	resolved  map[types.ID64]struct{}
 }
 
-func newMessageChunks() *MessageChunks {
-	return &MessageChunks{
-		messages: make(map[types.ID64]Message, 0),
-		resolved: make(map[types.ID64]struct{}, 0),
+func newChunkResolver(chunkSize byte) *ChunkResolver {
+	return &ChunkResolver{
+		chunkSize: chunkSize,
+		messages:  make(map[types.ID64]Message, 0),
+		resolved:  make(map[types.ID64]struct{}, 0),
 	}
 }
 
-func (s *MessageChunks) IsMessageResolved(id types.ID64) bool {
+func (s *ChunkResolver) IsMessageResolved(id types.ID64) bool {
 	_, ok := s.resolved[id]
 	return ok
 }
 
-func (s *MessageChunks) Resolve(id types.ID64) {
+func (s *ChunkResolver) Resolve(id types.ID64) {
 	s.resolved[id] = struct{}{}
 	delete(s.messages, id)
 }
 
-func (s *MessageChunks) CreateOrUpdate(mi MessageItem) (m Message) {
+func (s *ChunkResolver) CreateOrUpdate(mi MessageChunk) (m Message) {
 	m, ok := s.messages[mi.id]
 	if ok {
-		m.Update(mi.part.Position, mi.data)
+		m.Update(mi.data)
 	} else {
-		m = newMessage(mi)
+		m = newMessage(mi, s.chunkSize)
 		s.messages[m.id] = m
 	}
 
@@ -83,21 +82,21 @@ func (s *MessageChunks) CreateOrUpdate(mi MessageItem) (m Message) {
 type Processor func(m Message)
 
 type BucketHandler struct {
-	messageCh chan MessageItem
-	chunks    *MessageChunks
+	messageCh chan MessageChunk
+	chunks    *ChunkResolver
 	processor func(m Message)
 }
 
-func NewBucketHandler() *BucketHandler {
+func NewBucketHandler(chunkSize byte) *BucketHandler {
 	return &BucketHandler{
-		chunks:    newMessageChunks(),
+		chunks:    newChunkResolver(chunkSize),
 		processor: createProcessor(),
-		messageCh: make(chan MessageItem, 10),
+		messageCh: make(chan MessageChunk, 10),
 	}
 }
 
 func (h *BucketHandler) Message(header types.MessageHeader, data []byte) {
-	h.messageCh <- MessageItem{header.ID, header.Part, data}
+	h.messageCh <- MessageChunk{header.ID, data}
 }
 
 func (h *BucketHandler) Start() {
@@ -126,7 +125,7 @@ func (h *BucketHandler) Stop() {
 
 func createProcessor() Processor {
 	return func(m Message) {
-		d, err := types.DecryptFromParts(m.items)
+		d, err := types.DecryptFromChunks(m.chunks)
 		if err != nil {
 			fmt.Printf("error decodingfailed to decode message: %v \n", err)
 		}

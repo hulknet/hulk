@@ -56,8 +56,6 @@ func (rh *ReceiverHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	data.Write(messageHeader.To.Bytes())
 	data.Write(messageHeader.From.Bytes())
 	data.Write(messageHeader.Time.Bytes())
-	data.WriteByte(messageHeader.Part.Position)
-	data.WriteByte(messageHeader.Part.Length)
 	data.Write(messageBody)
 
 	correct, err := messageHeader.Sign[0].CheckSignature(data.Bytes())

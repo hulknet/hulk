@@ -11,7 +11,6 @@ type MessageHeader struct {
 	Token   Token
 	BlockID ID64
 	Time    Time
-	Part    Partition
 	Sign    []Sign520
 }
 
@@ -19,6 +18,10 @@ type BaseMessage struct {
 	Type string
 	Data msgpack.RawMessage
 	Sign []byte
+}
+
+type NetPartition struct {
+	Size byte
 }
 
 type Partition struct {
@@ -31,7 +34,7 @@ type Replica struct {
 	Min uint64
 }
 
-type Shard struct {
-	Len uint64
-	Num uint64
+type Precursor struct {
+	Min uint8
+	Mac uint8
 }

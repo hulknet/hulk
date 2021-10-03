@@ -36,7 +36,7 @@ func main() {
 		Status:  types.BlockStatusHead,
 	}
 	t := types.Tick{
-		IsNode: true,
+		IsNode: false,
 		ID:     tickId.ID64(),
 		ID256:  tickId,
 		Count:  0,

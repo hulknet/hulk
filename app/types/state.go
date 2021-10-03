@@ -7,22 +7,24 @@ type UpdateState interface {
 }
 
 type State struct {
-	time  Time
-	ticks map[ID64]Tick
-	block Block
-	peer  Peer
-	key   *ECKey
-	token Token
+	time    Time
+	ticks   map[ID64]Tick
+	block   Block
+	peer    Peer
+	key     *ECKey
+	token   Token
+	netPart NetPartition
 }
 
 func CreateState(time Time, block Block, ticks []Tick, peer Peer, key *ECKey, token Token) State {
 	state := State{
-		time:  time,
-		ticks: make(map[ID64]Tick, len(ticks)),
-		block: block,
-		peer:  peer,
-		key:   key,
-		token: token,
+		time:    time,
+		ticks:   make(map[ID64]Tick, len(ticks)),
+		block:   block,
+		peer:    peer,
+		key:     key,
+		token:   token,
+		netPart: NetPartition{Size: 2},
 	}
 
 	for _, tick := range ticks {
@@ -50,6 +52,10 @@ func (s State) Peer() Peer {
 
 func (s State) Block() Block {
 	return s.block
+}
+
+func (s State) NetPartition() NetPartition {
+	return s.netPart
 }
 
 func (s State) ID() ID64 {

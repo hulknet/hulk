@@ -17,7 +17,7 @@ func NewMessageHandlerContainer(state types.State) MessageHandlerContainer {
 		if tick.IsNode {
 			m[tick.ID] = NewNodeHandler()
 		} else {
-			m[tick.ID] = NewBucketHandler()
+			m[tick.ID] = NewBucketHandler(state.NetPartition().Size)
 		}
 		go m[tick.ID].Start()
 	}
