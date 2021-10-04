@@ -146,13 +146,12 @@ const (
 )
 
 type Tick struct {
-	ID            ID64
-	ID256         ID256
-	IsNode        bool
-	Count         uint8
-	BitSize       uint8
-	BitSizePrefix uint8
-	Status        TickStatus
+	ID      ID64
+	ID256   ID256
+	IsLocal bool
+	Count   byte
+	Level   byte
+	Status  TickStatus
 }
 
 type Time []byte

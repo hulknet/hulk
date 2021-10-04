@@ -36,11 +36,12 @@ func main() {
 		Status:  types.BlockStatusHead,
 	}
 	t := types.Tick{
-		IsNode: false,
-		ID:     tickId.ID64(),
-		ID256:  tickId,
-		Count:  0,
-		Status: types.TickStatusHead,
+		IsLocal: false,
+		ID:      tickId.ID64(),
+		ID256:   tickId,
+		Count:   0,
+		Level:   0,
+		Status:  types.TickStatusHead,
 	}
 	p := types.Peer{
 		Pub:   ecpk.Pub(),

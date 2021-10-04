@@ -14,7 +14,7 @@ func NewMessageHandlerContainer(state types.State) MessageHandlerContainer {
 	ticks := state.Ticks(true)
 	m := make(map[types.ID64]MessageHandler, len(ticks))
 	for _, tick := range ticks {
-		if tick.IsNode {
+		if tick.IsLocal {
 			m[tick.ID] = NewNodeHandler()
 		} else {
 			m[tick.ID] = NewBucketHandler(state.NetPartition().Size)

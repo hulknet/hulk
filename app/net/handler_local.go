@@ -8,26 +8,26 @@ import (
 	"github.com/hulknet/hulk/app/types"
 )
 
-type NodeMessage struct {
+type LocalMessage struct {
 	id   types.ID64
 	data []byte
 }
 
-type NodeHandler struct {
-	messageCh chan NodeMessage
-	processor func(m NodeMessage)
+type LocalHandler struct {
+	messageCh chan LocalMessage
+	processor func(m LocalMessage)
 	resolved  map[types.ID64]struct{}
 }
 
-func NewNodeHandler() *NodeHandler {
-	return &NodeHandler{
-		processor: createNodeProcessor(),
-		messageCh: make(chan NodeMessage, 10),
+func NewNodeHandler() *LocalHandler {
+	return &LocalHandler{
+		processor: createLocalProcessor(),
+		messageCh: make(chan LocalMessage, 10),
 		resolved:  make(map[types.ID64]struct{}),
 	}
 }
 
-func (h *NodeHandler) Start() {
+func (h *LocalHandler) Start() {
 	for {
 		select {
 		case mi, ok := <-h.messageCh:
@@ -42,18 +42,18 @@ func (h *NodeHandler) Start() {
 	}
 }
 
-func (h *NodeHandler) Stop() {
+func (h *LocalHandler) Stop() {
 	close(h.messageCh)
 }
 
-func (h *NodeHandler) Message(header types.MessageHeader, data []byte) {
-	h.messageCh <- NodeMessage{header.ID, data}
+func (h *LocalHandler) Message(header types.MessageHeader, data []byte) {
+	h.messageCh <- LocalMessage{header.ID, data}
 }
 
-type NodeProcessor func(m NodeMessage)
+type LocalProcessor func(m LocalMessage)
 
-func createNodeProcessor() NodeProcessor {
-	return func(m NodeMessage) {
+func createLocalProcessor() LocalProcessor {
+	return func(m LocalMessage) {
 		var baseMessage types.BaseMessage
 		if err := msgpack.Unmarshal(m.data, &baseMessage); err != nil {
 			fmt.Printf("failed to unmarshal BaseMessage: %v \n", err)
