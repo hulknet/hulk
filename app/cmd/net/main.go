@@ -36,21 +36,27 @@ func main() {
 		Status:  types.BlockStatusHead,
 	}
 	t := types.Tick{
-		IsLocal: false,
-		ID:      tickId.ID64(),
-		ID256:   tickId,
-		Count:   0,
-		Level:   0,
-		Status:  types.TickStatusHead,
+		ID: tickId.ID64(),
+		//ID256:   tickId,
+		Inc:    0,
+		Level:  0,
+		Status: types.TickStatusHead,
 	}
 	p := types.Peer{
 		Pub:   ecpk.Pub(),
 		Token: token,
 	}
 
-	var time types.Time
-	time = append(time, t.ID.Bytes()...)
-	time = append(time, byte(1))
+	var timeSrc []byte
+	timeSrc = append(timeSrc, p.Pub.ID().Bytes()...)
+	timeSrc = append(timeSrc, block.ID.Bytes()...)
+	timeSrc = append(timeSrc, t.ID.Bytes()...)
+	timeSrc = append(timeSrc, byte(1))
+
+	time, err := types.DecodeTime(timeSrc)
+	if err != nil {
+		panic(err)
+	}
 
 	var blocks []types.Block
 	blocks = append(blocks, block)

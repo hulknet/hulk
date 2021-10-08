@@ -19,7 +19,7 @@ type LocalHandler struct {
 	resolved  map[types.ID64]struct{}
 }
 
-func NewNodeHandler() *LocalHandler {
+func NewLocalHandler() *LocalHandler {
 	return &LocalHandler{
 		processor: createLocalProcessor(),
 		messageCh: make(chan LocalMessage, 10),
@@ -38,6 +38,7 @@ func (h *LocalHandler) Start() {
 				continue
 			}
 			go h.processor(mi)
+			h.resolved[mi.id] = struct{}{}
 		}
 	}
 }
@@ -46,8 +47,8 @@ func (h *LocalHandler) Stop() {
 	close(h.messageCh)
 }
 
-func (h *LocalHandler) Message(header types.MessageHeader, data []byte) {
-	h.messageCh <- LocalMessage{header.ID, data}
+func (h *LocalHandler) Message(header types.NetMessage) {
+	h.messageCh <- LocalMessage{header.ID, header.Data}
 }
 
 type LocalProcessor func(m LocalMessage)

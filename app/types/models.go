@@ -1,17 +1,26 @@
 package types
 
 import (
+	"bytes"
+
 	"github.com/vmihailenco/msgpack/v5"
 )
 
-type MessageHeader struct {
-	ID      ID64
-	To      ID64
-	From    ID64
-	Token   Token
-	BlockID ID64
-	Time    Time
-	Sign    []Sign520
+type NetMessage struct {
+	ID    ID64
+	Addr  ID64
+	Time  Time
+	Token Token
+	Data  []byte
+	Sign  []Sign520
+}
+
+func (msg *NetMessage) Encode() []byte {
+	data := bytes.NewBuffer(msg.ID.Bytes())
+	data.Write(msg.Addr.Bytes())
+	data.Write(msg.Time.Encode())
+	data.Write(msg.Data)
+	return data.Bytes()
 }
 
 type BaseMessage struct {

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
@@ -79,6 +80,10 @@ func (i ID64) Hex() string {
 
 func (i ID64) Uint64() uint64 {
 	return binary.BigEndian.Uint64(i[:])
+}
+
+func (i ID64) Equal(other ID64) bool {
+	return bytes.Compare(i[:], other[:]) == 0
 }
 
 func ID256ToHex(s [32]byte) string {

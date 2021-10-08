@@ -11,34 +11,25 @@ import (
 const (
 	idHeader        = "ID"
 	tokenHeader     = "Token"
-	blockHeader     = "Block"
 	timeHeader      = "Time"
-	toHeader        = "To"
-	fromHeader      = "From"
-	partHeader      = "Partition"
+	addrHeader      = "Addr"
 	signatureHeader = "Signature"
 )
 
-func ParseHTTPHeader(header http.Header) (messageHeader types.MessageHeader, err error) {
-	if messageHeader.Token, err = parseToken(header.Get(tokenHeader)); err != nil {
+func ParseHTTPHeader(header http.Header) (netMessage types.NetMessage, err error) {
+	if netMessage.Token, err = parseToken(header.Get(tokenHeader)); err != nil {
 		return
 	}
-	if messageHeader.BlockID, err = parseID(header.Get(blockHeader)); err != nil {
+	if netMessage.Sign, err = parseSignature(header.Get(signatureHeader)); err != nil {
 		return
 	}
-	if messageHeader.Sign, err = parseSignature(header.Get(signatureHeader)); err != nil {
+	if netMessage.Time, err = parseTime(header.Get(timeHeader)); err != nil {
 		return
 	}
-	if messageHeader.Time, err = parseTime(header.Get(timeHeader)); err != nil {
+	if netMessage.Addr, err = parseID(header.Get(addrHeader)); err != nil {
 		return
 	}
-	if messageHeader.To, err = parseID(header.Get(toHeader)); err != nil {
-		return
-	}
-	if messageHeader.From, err = parseID(header.Get(fromHeader)); err != nil {
-		return
-	}
-	if messageHeader.ID, err = parseID(header.Get(idHeader)); err != nil {
+	if netMessage.ID, err = parseID(header.Get(idHeader)); err != nil {
 		return
 	}
 
@@ -83,15 +74,12 @@ func parseTime(timeStr string) (time types.Time, err error) {
 		err = errors.New(types.ErrGetTime)
 		return
 	}
-	time, parserErr := types.FromHex(timeStr, 0)
+	timeSrc, parserErr := types.FromHex(timeStr, 0)
 	if parserErr != nil {
 		err = errors.New(types.ErrDecodeTime)
 		return
 	}
-	if !time.Validate() {
-		err = errors.New(types.ErrInvalidTime)
-		return
-	}
+	time, err = types.DecodeTime(timeSrc)
 	return
 }
 
@@ -101,23 +89,6 @@ func parseID(srcStr string) (id types.ID64, err error) {
 		return
 	}
 	id, err = types.ID64FromHex(srcStr)
-
-	return
-}
-
-func parsePart(partStr string) (part types.Partition, err error) {
-	if partStr == "" {
-		return
-	}
-
-	partBytes, err := types.FromHex(partStr, 2)
-	if err != nil {
-		err = errors.New(types.ErrDecodePart)
-		return
-	}
-
-	part.Position = partBytes[0]
-	part.Length = partBytes[1]
 
 	return
 }

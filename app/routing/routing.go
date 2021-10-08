@@ -9,12 +9,12 @@ type Table struct {
 	buckets []Bucket
 }
 
-func NewTable(block types.Block, self types.Peer) *Table {
+func NewTable(state types.State) *Table {
 	c := &Table{
-		id:      block.ID,
-		buckets: createBuckets(block.BitSize),
+		id:      state.Block().ID,
+		buckets: createBuckets(state.Block().BitSize),
 	}
-	c.SetPeer(self)
+	c.SetPeer(state.Peer())
 
 	return c
 }

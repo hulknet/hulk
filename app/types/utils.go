@@ -21,9 +21,8 @@ func GenerateSHA() ID256 {
 	return sha256.Sum256(bs)
 }
 
-func GenerateSHAFrom(source string) ID256 {
-	bs := []byte(source)
-	return sha256.Sum256(bs)
+func GenerateID256FromSource(source []byte) ID256 {
+	return sha256.Sum256(source)
 }
 
 func Cpl(p1, p2 []byte) int {

@@ -81,25 +81,25 @@ func (s *ChunkResolver) CreateOrUpdate(mi MessageChunk) (m Message) {
 
 type Processor func(m Message)
 
-type BucketHandler struct {
+type GlobalHandler struct {
 	messageCh chan MessageChunk
 	chunks    *ChunkResolver
 	processor func(m Message)
 }
 
-func NewBucketHandler(chunkSize byte) *BucketHandler {
-	return &BucketHandler{
-		chunks:    newChunkResolver(chunkSize),
+func NewGlobalHandler(conf types.NetPartition) *GlobalHandler {
+	return &GlobalHandler{
+		chunks:    newChunkResolver(conf.Size),
 		processor: createProcessor(),
 		messageCh: make(chan MessageChunk, 10),
 	}
 }
 
-func (h *BucketHandler) Message(header types.MessageHeader, data []byte) {
-	h.messageCh <- MessageChunk{header.ID, data}
+func (h *GlobalHandler) Message(header types.NetMessage) {
+	h.messageCh <- MessageChunk{header.ID, header.Data}
 }
 
-func (h *BucketHandler) Start() {
+func (h *GlobalHandler) Start() {
 	for {
 		select {
 		case mi, ok := <-h.messageCh:
@@ -119,7 +119,7 @@ func (h *BucketHandler) Start() {
 	}
 }
 
-func (h *BucketHandler) Stop() {
+func (h *GlobalHandler) Stop() {
 	close(h.messageCh)
 }
 

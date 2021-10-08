@@ -32,14 +32,14 @@ func (c *Container) Net(id types.ID64) (net *Net, ok bool) {
 type Net struct {
 	state     types.State
 	table     *routing.Table
-	handler   MessageHandlerContainer
+	handler   *MessageHandlerContainer
 	allowList AllowList
 }
 
 func NewNet(state types.State) *Net {
 	return &Net{
 		state:     state,
-		table:     routing.NewTable(state.Block(), state.Peer()),
+		table:     routing.NewTable(state),
 		handler:   NewMessageHandlerContainer(state),
 		allowList: createAllowList(state.Peer()),
 	}
@@ -66,10 +66,10 @@ func (n *Net) AllowList() AllowList {
 	return n.allowList
 }
 
-func (n *Net) HandleMessage(header types.MessageHeader, data []byte) {
-	n.handler.Message(header, data)
+func (n *Net) HandleMessage(header types.NetMessage) {
+	n.handler.Message(header)
 }
 
-func (n *Net) ProxyMessage(header types.MessageHeader, data []byte) {
+func (n *Net) ProxyMessage(header types.NetMessage) {
 
 }

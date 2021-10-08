@@ -1,6 +1,7 @@
 package net
 
 import (
+	"encoding/hex"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -54,7 +55,7 @@ func NewRestServer(netCont *Container, addr string, secret interface{}) *Rest {
 			"id":      net.State().Peer().Pub.ID().Hex(),
 			"blockId": net.State().ID().Hex(),
 			"token":   net.State().Peer().Token.Hex(),
-			"time":    net.State().Time().Hex(),
+			"time":    hex.EncodeToString(net.State().Now().Encode()),
 		})
 	})
 

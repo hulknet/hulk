@@ -1,7 +1,6 @@
 package net
 
 import (
-	"bytes"
 	"io/ioutil"
 	"net/http"
 
@@ -21,56 +20,49 @@ func NewReceiverHandler(netCont *Container) *ReceiverHandler {
 }
 
 func (rh *ReceiverHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	messageHeader, err := libHttp.ParseHTTPHeader(r.Header)
+	netMessage, err := libHttp.ParseHTTPHeader(r.Header)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Errorf("header is invalid, %s\n", err)
 		return
 	}
 
-	net, ok := rh.netCont.Net(messageHeader.BlockID)
+	net, ok := rh.netCont.Net(netMessage.Time.BlockID())
 	if !ok || !net.IsActive() {
 		http.Error(w, "invalid block", http.StatusForbidden)
 		return
 	}
 
-	if !net.AllowList().CheckToken(messageHeader.Token) {
+	if !net.AllowList().CheckToken(netMessage.Token) {
 		http.Error(w, "invalid token", http.StatusForbidden)
 		return
 	}
 
-	if !net.State().ValidateTime(messageHeader.From, messageHeader.Time) {
+	if !net.State().ValidateTime(netMessage.Time) {
 		http.Error(w, "invalid time", http.StatusForbidden)
 		return
 	}
 
-	messageBody, err := ioutil.ReadAll(r.Body)
+	netMessage.Data, err = ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Error(err)
 		http.Error(w, "invalid body", http.StatusBadRequest)
 		return
 	}
 
-	data := bytes.NewBuffer(messageHeader.ID.Bytes())
-	data.Write(messageHeader.BlockID.Bytes())
-	data.Write(messageHeader.To.Bytes())
-	data.Write(messageHeader.From.Bytes())
-	data.Write(messageHeader.Time.Bytes())
-	data.Write(messageBody)
-
-	correct, err := messageHeader.Sign[0].CheckSignature(data.Bytes())
+	correct, err := netMessage.Sign[0].CheckSignature(netMessage.Encode())
 	if err != nil || !correct {
 		log.Error(err)
 		http.Error(w, "invalid signature", http.StatusForbidden)
 		return
 	}
 
-	nextPeer := net.Table().GetPeer(messageHeader.To)
+	nextPeer := net.Table().GetPeer(netMessage.Addr)
 
 	if net.State().Peer().Equal(nextPeer) {
-		net.HandleMessage(messageHeader, messageBody)
+		net.HandleMessage(netMessage)
 	} else {
-		net.ProxyMessage(messageHeader, messageBody)
+		net.ProxyMessage(netMessage)
 	}
 
 	w.WriteHeader(http.StatusOK)

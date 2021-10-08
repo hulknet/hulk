@@ -19,9 +19,7 @@ import (
 
 type MessageHeaderModel struct {
 	ID    string
-	Block string
-	To    string
-	From  string
+	Addr  string
 	Time  string
 	Token string
 	Body  string
@@ -162,11 +160,9 @@ func main() {
 		}
 
 		req.Header.Add("ID", m.ID)
-		req.Header.Add("Block", m.Block)
 		req.Header.Add("Token", m.Token)
-		req.Header.Add("To", m.To)
+		req.Header.Add("Addr", m.Addr)
 		req.Header.Add("Time", m.Time)
-		req.Header.Add("From", m.From)
 		req.Header.Add("Signature", hex.EncodeToString(sign))
 		resp, err := client.Do(req)
 		if err != nil {
@@ -198,15 +194,7 @@ func signMessage(m *MessageHeaderModel, pKey *ecdsa.PrivateKey) ([]byte, error) 
 	if err != nil {
 		return nil, err
 	}
-	blockId, err := parseID(m.Block)
-	if err != nil {
-		return nil, err
-	}
-	to, err := parseID(m.To)
-	if err != nil {
-		return nil, err
-	}
-	from, err := parseID(m.From)
+	addr, err := parseID(m.Addr)
 	if err != nil {
 		return nil, err
 	}
@@ -214,16 +202,13 @@ func signMessage(m *MessageHeaderModel, pKey *ecdsa.PrivateKey) ([]byte, error) 
 	if err != nil {
 		return nil, err
 	}
-
 	body, err := types.FromHex(m.Body, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	data := bytes.NewBuffer(id[:])
-	data.Write(blockId[:])
-	data.Write(to[:])
-	data.Write(from[:])
+	data.Write(addr[:])
 	data.Write(time[:])
 	data.Write(body)
 
