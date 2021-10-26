@@ -26,6 +26,9 @@ type MessageHeaderModel struct {
 }
 
 type SignModel struct {
+	ID   string
+	Time string
+	Type string
 	Body msgpack.RawMessage
 }
 
@@ -67,8 +70,7 @@ func main() {
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
 
-		msgHash := sha3.Sum256(m.Body)
-		sign, err := crypto.Sign(msgHash[:], ecpk.ECPrivateKey())
+		sign, err := signSignModel(m, ecpk.ECPrivateKey())
 		if err != nil {
 			log.Error(err)
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -77,6 +79,9 @@ func main() {
 		return ctx.JSON(http.StatusOK, echo.Map{
 			"sing": hex.EncodeToString(sign),
 			"body": hex.EncodeToString(m.Body),
+			"id":   m.ID,
+			"type": m.Type,
+			"time": m.Time,
 		})
 	})
 
@@ -187,6 +192,25 @@ func main() {
 	})
 
 	fmt.Println(e.Start("127.0.0.1:7009"))
+}
+
+func signSignModel(m *SignModel, pKey *ecdsa.PrivateKey) ([]byte, error) {
+	id, err := parseID(m.ID)
+	if err != nil {
+		return nil, err
+	}
+	time, err := types.FromHex(m.Time, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	data := bytes.NewBuffer(id[:])
+	data.Write(time[:])
+	data.Write([]byte(m.Type))
+	data.Write(m.Body)
+
+	msgHash := sha3.Sum256(data.Bytes())
+	return crypto.Sign(msgHash[:], pKey)
 }
 
 func signMessage(m *MessageHeaderModel, pKey *ecdsa.PrivateKey) ([]byte, error) {

@@ -2,6 +2,7 @@ package types
 
 import (
 	"bytes"
+	"fmt"
 
 	"github.com/vmihailenco/msgpack/v5"
 )
@@ -24,26 +25,30 @@ func (msg *NetMessage) Encode() []byte {
 }
 
 type BaseMessage struct {
+	ID   ID64
+	Time Time
 	Type string
-	Data msgpack.RawMessage
-	Sign []byte
+	Data []byte
+	Sign Sign520
+}
+
+func UnmarshalBaseMessage(data []byte) (bm BaseMessage, err error) {
+	if err = msgpack.Unmarshal(data, &bm); err != nil {
+		err = fmt.Errorf("failed to unmarshal BaseMessage: %w \n", err)
+	}
+	return
 }
 
 type NetPartition struct {
 	Size byte
 }
 
-type Partition struct {
-	Position byte
-	Length   byte
-}
-
 type Replica struct {
-	Max uint64
 	Min uint64
+	Exp uint64
 }
 
 type Precursor struct {
 	Min uint8
-	Mac uint8
+	Exp uint8
 }

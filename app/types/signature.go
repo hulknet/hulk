@@ -44,7 +44,7 @@ func (s Sign520) CheckHashSignature(hash []byte) (bool, error) {
 	return secp256k1.VerifySignature(pk[:], hash[:], s[:64]), nil
 }
 
-func CheckSignature(msg []byte, sign []byte) (bool, error) {
+func CheckSignature(msg []byte, sign Sign520) (bool, error) {
 	msgHash := sha3.Sum256(msg)
 	pk, err := secp256k1.RecoverPubkey(msgHash[:], sign[:])
 	if err != nil {

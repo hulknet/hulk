@@ -2,20 +2,21 @@ package net
 
 import (
 	"encoding/hex"
-	"fmt"
 
-	"github.com/vmihailenco/msgpack/v5"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/hulknet/hulk/app/types"
 )
 
 type MessageChunk struct {
 	id   types.ID64
+	time types.Time
 	data []byte
 }
 
 type Message struct {
 	id     types.ID64
+	time   types.Time
 	chunks [][]byte
 }
 
@@ -38,6 +39,7 @@ func (m Message) Assembled() bool {
 
 func newMessage(mi MessageChunk, chunksSize byte) (m Message) {
 	m.id = mi.id
+	m.time = mi.time
 	m.chunks = make([][]byte, chunksSize)
 	m.chunks[mi.data[0]] = mi.data
 	return
@@ -96,7 +98,7 @@ func NewGlobalHandler(conf types.NetPartition) *GlobalHandler {
 }
 
 func (h *GlobalHandler) Message(header types.NetMessage) {
-	h.messageCh <- MessageChunk{header.ID, header.Data}
+	h.messageCh <- MessageChunk{header.ID, header.Time, header.Data}
 }
 
 func (h *GlobalHandler) Start() {
@@ -127,22 +129,22 @@ func createProcessor() Processor {
 	return func(m Message) {
 		d, err := types.DecryptFromChunks(m.chunks)
 		if err != nil {
-			fmt.Printf("error decodingfailed to decode message: %v \n", err)
+			log.Errorf("failed to decode message: %v \n", err)
 		}
 
-		var baseMessage types.BaseMessage
-		if err = msgpack.Unmarshal(d, &baseMessage); err != nil {
-			fmt.Printf("failed to unmarshal BaseMessage: %v \n", err)
-		}
-
-		ok, err := types.CheckSignature(baseMessage.Data, baseMessage.Sign)
+		baseMessage, err := types.UnmarshalBaseMessage(d)
 		if err != nil {
-			fmt.Printf("failed to check signature: %v \n", err)
-		} else if !ok {
-			fmt.Printf("signature is invalid: %v \n", baseMessage)
+			log.Error(err)
 		}
 
-		fmt.Println(baseMessage.Type)
-		fmt.Println(hex.EncodeToString(baseMessage.Data))
+		ok, err := baseMessage.Sign.CheckSignature(baseMessage.Data)
+		if err != nil {
+			log.Errorf("failed to check signature: %v \n", err)
+		} else if !ok {
+			log.Errorf("signature is invalid: %v \n", baseMessage)
+		}
+
+		log.Println(baseMessage.Type)
+		log.Println(hex.EncodeToString(baseMessage.Data))
 	}
 }

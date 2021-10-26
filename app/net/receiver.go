@@ -9,17 +9,17 @@ import (
 	libHttp "github.com/hulknet/hulk/app/http"
 )
 
-type ReceiverHandler struct {
+type Receiver struct {
 	netCont *Container
 }
 
-func NewReceiverHandler(netCont *Container) *ReceiverHandler {
-	return &ReceiverHandler{
+func NewReceiverHandler(netCont *Container) *Receiver {
+	return &Receiver{
 		netCont: netCont,
 	}
 }
 
-func (rh *ReceiverHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (rh *Receiver) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	netMessage, err := libHttp.ParseHTTPHeader(r.Header)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)

@@ -10,6 +10,7 @@ import (
 
 type LocalMessage struct {
 	id   types.ID64
+	time types.Time
 	data []byte
 }
 
@@ -48,7 +49,7 @@ func (h *LocalHandler) Stop() {
 }
 
 func (h *LocalHandler) Message(header types.NetMessage) {
-	h.messageCh <- LocalMessage{header.ID, header.Data}
+	h.messageCh <- LocalMessage{header.ID, header.Time, header.Data}
 }
 
 type LocalProcessor func(m LocalMessage)
